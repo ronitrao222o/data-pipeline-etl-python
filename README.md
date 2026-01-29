@@ -9,6 +9,8 @@ relational database for analytics and reporting.
 - Extract: Reads raw CSV data
 - Transform: Cleans data and computes derived metrics
 - Load: Stores processed data into SQLite database
+- Structured logging added to track execution of extract, transform, and load steps
+
 
 ## How to Run
 ```bash
