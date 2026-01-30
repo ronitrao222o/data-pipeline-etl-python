@@ -10,6 +10,7 @@ relational database for analytics and reporting.
 - Transform: Cleans data and computes derived metrics
 - Load: Stores processed data into SQLite database
 - Structured logging added to track execution of extract, transform, and load steps
+- Input validation added during transformation to safely handle missing or malformed records
 
 
 ## How to Run
