@@ -14,6 +14,8 @@ relational database for analytics and reporting.
 - Configuration-driven pipeline using external YAML config for input paths
 - Graceful error handling added during data extraction to handle missing or unreadable input files with clear logging
 - Basic unit testing for transformation logic using pytest
+-Improve repository hygiene and add .gitignore
+
 
 ## Configuration
 The pipeline uses a YAML configuration file (`config.yaml`) to manage input paths and runtime settings.
