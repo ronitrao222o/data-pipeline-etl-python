@@ -1,22 +1,26 @@
+from __future__ import annotations
+
 import csv
 import logging
+from pathlib import Path
 
-def extract_data(file_path):
-    data = []
+
+def extract_data(file_path: str | Path) -> list[dict[str, str]]:
+    path = Path(file_path)
 
     try:
-        with open(file_path, mode='r') as file:
+        with path.open(mode="r", encoding="utf-8", newline="") as file:
             reader = csv.DictReader(file)
-            for row in reader:
-                data.append(row)
-        logging.info(f"Successfully extracted data from {file_path}")
+            if not reader.fieldnames:
+                raise ValueError(f"Input file {path} does not contain a CSV header row")
+
+            data = list(reader)
+            logging.info("Successfully extracted %s rows from %s", len(data), path)
+            return data
 
     except FileNotFoundError:
-        logging.error(f"Input file not found: {file_path}")
+        logging.error("Input file not found: %s", path)
         raise
-
-    except Exception as e:
-        logging.error(f"Error while reading file {file_path}: {e}")
+    except Exception as error:
+        logging.error("Error while reading file %s: %s", path, error)
         raise
-
-    return data
