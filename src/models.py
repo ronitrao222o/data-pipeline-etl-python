@@ -28,6 +28,7 @@ class PipelineConfig:
     report_output_path: Path
     log_level: str = "INFO"
     quality_thresholds: "DataQualityThresholds" | None = None
+    runtime: "RuntimeConfig" | None = None
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,24 @@ class DataQualityThresholds:
             "min_valid_records": self.min_valid_records,
             "max_rejection_rate": self.max_rejection_rate,
             "max_duplicate_records": self.max_duplicate_records,
+        }
+
+
+@dataclass(frozen=True)
+class RuntimeConfig:
+    environment: str = "dev"
+    owner: str = "analytics-engineering"
+    default_trigger_mode: str = "manual"
+    schedule_name: str = "adhoc"
+    schedule_cron: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "environment": self.environment,
+            "owner": self.owner,
+            "default_trigger_mode": self.default_trigger_mode,
+            "schedule_name": self.schedule_name,
+            "schedule_cron": self.schedule_cron,
         }
 
 
@@ -140,6 +159,30 @@ class DataQualitySummary:
 
 
 @dataclass(frozen=True)
+class RuntimeSummary:
+    run_id: str
+    environment: str
+    owner: str
+    trigger_mode: str
+    schedule_name: str
+    schedule_cron: str | None
+    dry_run: bool
+    load_step_skipped: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "run_id": self.run_id,
+            "environment": self.environment,
+            "owner": self.owner,
+            "trigger_mode": self.trigger_mode,
+            "schedule_name": self.schedule_name,
+            "schedule_cron": self.schedule_cron,
+            "dry_run": self.dry_run,
+            "load_step_skipped": self.load_step_skipped,
+        }
+
+
+@dataclass(frozen=True)
 class PipelineRunSummary:
     status: str
     started_at: datetime
@@ -155,6 +198,7 @@ class PipelineRunSummary:
     total_revenue: float
     rejected_records: list[RejectedRecord]
     quality_summary: DataQualitySummary
+    runtime_summary: RuntimeSummary
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -172,4 +216,5 @@ class PipelineRunSummary:
             "total_revenue": self.total_revenue,
             "rejected_records": _json_ready(self.rejected_records),
             "quality_summary": self.quality_summary.to_dict(),
+            "runtime_summary": self.runtime_summary.to_dict(),
         }

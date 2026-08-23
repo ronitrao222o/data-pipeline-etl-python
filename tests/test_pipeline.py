@@ -135,3 +135,58 @@ def test_run_pipeline_can_fail_on_quality_gate(tmp_path):
     assert error.value.summary.status == "quality_gate_failed"
     assert error.value.summary.quality_summary.passed is False
     assert error.value.summary.loaded_count == 0
+
+
+def test_run_pipeline_supports_dry_run_and_runtime_metadata(tmp_path):
+    schema_path = Path(__file__).resolve().parents[1] / "schema.sql"
+    csv_path = tmp_path / "sales.csv"
+    csv_path.write_text(
+        "\n".join(
+            [
+                "order_id,customer_id,order_date,product,quantity,price",
+                "501,C010,2024-02-01,Laptop,1,65000",
+                "502,C011,2024-02-02,Mouse,2,500",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        "\n".join(
+            [
+                f"raw_data_path: {csv_path}",
+                f"database_path: {tmp_path / 'sales.db'}",
+                f"schema_path: {schema_path}",
+                f"report_output_path: {tmp_path / 'report.json'}",
+                "log_level: INFO",
+                "runtime:",
+                "  environment: prod",
+                "  owner: data-platform",
+                "  default_trigger_mode: scheduled",
+                "  schedule_name: nightly-sales-etl",
+                "  schedule_cron: '0 1 * * *'",
+                "quality_thresholds:",
+                "  min_valid_records: 2",
+                "  max_rejection_rate: 0.0",
+                "  max_duplicate_records: 0",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    summary = run_pipeline(
+        str(config_path),
+        dry_run=True,
+        run_id="airflow-run-001",
+        trigger_mode="scheduled",
+    )
+
+    assert summary.status == "dry_run_success"
+    assert summary.loaded_count == 0
+    assert summary.runtime_summary.run_id == "airflow-run-001"
+    assert summary.runtime_summary.environment == "prod"
+    assert summary.runtime_summary.trigger_mode == "scheduled"
+    assert summary.runtime_summary.dry_run is True
+    assert summary.runtime_summary.load_step_skipped is True
+    assert not (tmp_path / "sales.db").exists()
