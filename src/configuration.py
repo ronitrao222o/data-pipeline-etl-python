@@ -6,9 +6,9 @@ from typing import Any
 import yaml
 
 try:
-    from .models import PipelineConfig
+    from .models import DataQualityThresholds, PipelineConfig
 except ImportError:  # pragma: no cover - fallback for direct script execution
-    from models import PipelineConfig
+    from models import DataQualityThresholds, PipelineConfig
 
 
 DEFAULT_CONFIG = {
@@ -17,6 +17,11 @@ DEFAULT_CONFIG = {
     "schema_path": "schema.sql",
     "report_output_path": "artifacts/pipeline_run_report.json",
     "log_level": "INFO",
+    "quality_thresholds": {
+        "min_valid_records": 3,
+        "max_rejection_rate": 0.2,
+        "max_duplicate_records": 0,
+    },
 }
 
 
@@ -35,6 +40,10 @@ def load_config(path: str = "config.yaml") -> PipelineConfig:
 
     merged_config = {**DEFAULT_CONFIG, **raw_config}
     base_dir = config_path.parent
+    quality_thresholds = {
+        **DEFAULT_CONFIG["quality_thresholds"],
+        **(raw_config.get("quality_thresholds") or {}),
+    }
 
     return PipelineConfig(
         raw_data_path=_resolve_path(base_dir, str(merged_config["raw_data_path"])),
@@ -42,5 +51,9 @@ def load_config(path: str = "config.yaml") -> PipelineConfig:
         schema_path=_resolve_path(base_dir, str(merged_config["schema_path"])),
         report_output_path=_resolve_path(base_dir, str(merged_config["report_output_path"])),
         log_level=str(merged_config["log_level"]).upper(),
+        quality_thresholds=DataQualityThresholds(
+            min_valid_records=int(quality_thresholds["min_valid_records"]),
+            max_rejection_rate=float(quality_thresholds["max_rejection_rate"]),
+            max_duplicate_records=int(quality_thresholds["max_duplicate_records"]),
+        ),
     )
-

@@ -27,6 +27,21 @@ class PipelineConfig:
     schema_path: Path
     report_output_path: Path
     log_level: str = "INFO"
+    quality_thresholds: "DataQualityThresholds" | None = None
+
+
+@dataclass(frozen=True)
+class DataQualityThresholds:
+    min_valid_records: int = 1
+    max_rejection_rate: float = 0.25
+    max_duplicate_records: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "min_valid_records": self.min_valid_records,
+            "max_rejection_rate": self.max_rejection_rate,
+            "max_duplicate_records": self.max_duplicate_records,
+        }
 
 
 @dataclass(frozen=True)
@@ -79,6 +94,52 @@ class TransformationResult:
 
 
 @dataclass(frozen=True)
+class QualityCheckResult:
+    name: str
+    passed: bool
+    actual_value: float | int
+    expected_value: float | int
+    message: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "passed": self.passed,
+            "actual_value": self.actual_value,
+            "expected_value": self.expected_value,
+            "message": self.message,
+        }
+
+
+@dataclass(frozen=True)
+class DataQualitySummary:
+    passed: bool
+    rejection_rate: float
+    duplicate_record_count: int
+    unique_customer_count: int
+    unique_product_count: int
+    average_order_value: float
+    total_revenue: float
+    order_date_range: dict[str, date | None]
+    thresholds: DataQualityThresholds
+    checks: list[QualityCheckResult]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "passed": self.passed,
+            "rejection_rate": self.rejection_rate,
+            "duplicate_record_count": self.duplicate_record_count,
+            "unique_customer_count": self.unique_customer_count,
+            "unique_product_count": self.unique_product_count,
+            "average_order_value": self.average_order_value,
+            "total_revenue": self.total_revenue,
+            "order_date_range": _json_ready(self.order_date_range),
+            "thresholds": self.thresholds.to_dict(),
+            "checks": _json_ready(self.checks),
+        }
+
+
+@dataclass(frozen=True)
 class PipelineRunSummary:
     status: str
     started_at: datetime
@@ -93,6 +154,7 @@ class PipelineRunSummary:
     duplicate_order_ids: list[int]
     total_revenue: float
     rejected_records: list[RejectedRecord]
+    quality_summary: DataQualitySummary
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -109,5 +171,5 @@ class PipelineRunSummary:
             "duplicate_order_ids": self.duplicate_order_ids,
             "total_revenue": self.total_revenue,
             "rejected_records": _json_ready(self.rejected_records),
+            "quality_summary": self.quality_summary.to_dict(),
         }
-
