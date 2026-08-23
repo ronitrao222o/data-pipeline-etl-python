@@ -6,6 +6,7 @@ __pycache__/
 
 # Virtual Environment
 venv/
+.venv/
 .env
 
 # OS
@@ -14,6 +15,7 @@ Thumbs.db
 
 # Database
 *.db
+artifacts/
 
 # Logs
 *.log

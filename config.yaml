@@ -1,1 +1,5 @@
 raw_data_path: data/raw_sales_data.csv
+database_path: artifacts/sales.db
+schema_path: schema.sql
+report_output_path: artifacts/pipeline_run_report.json
+log_level: INFO
