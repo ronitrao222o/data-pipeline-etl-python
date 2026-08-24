@@ -17,7 +17,9 @@ DEFAULT_CONFIG = {
     "database_path": "artifacts/sales.db",
     "schema_path": "schema.sql",
     "report_output_path": "artifacts/pipeline_run_report.json",
+    "analytics_output_path": "artifacts/sales_analytics_report.json",
     "log_level": "INFO",
+    "analytics_top_n": 5,
     "quality_thresholds": {
         "min_valid_records": 3,
         "max_rejection_rate": 0.2,
@@ -38,6 +40,7 @@ ENVIRONMENT_OVERRIDE_FIELDS = {
     "database_path": "ETL_DATABASE_PATH",
     "schema_path": "ETL_SCHEMA_PATH",
     "report_output_path": "ETL_REPORT_OUTPUT_PATH",
+    "analytics_output_path": "ETL_ANALYTICS_OUTPUT_PATH",
     "log_level": "ETL_LOG_LEVEL",
 }
 
@@ -128,7 +131,9 @@ def load_config(
         database_path=_resolve_path(base_dir, str(merged_config["database_path"])),
         schema_path=_resolve_path(base_dir, str(merged_config["schema_path"])),
         report_output_path=_resolve_path(base_dir, str(merged_config["report_output_path"])),
+        analytics_output_path=_resolve_path(base_dir, str(merged_config["analytics_output_path"])),
         log_level=str(merged_config["log_level"]).upper(),
+        analytics_top_n=int(merged_config["analytics_top_n"]),
         quality_thresholds=DataQualityThresholds(
             min_valid_records=int(quality_thresholds["min_valid_records"]),
             max_rejection_rate=float(quality_thresholds["max_rejection_rate"]),

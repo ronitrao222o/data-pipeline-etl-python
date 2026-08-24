@@ -11,6 +11,7 @@ This repository is evolving from a starter ETL assignment into a stronger portfo
 - run-level observability through JSON execution reports
 - configurable data-quality gates for production-style pipeline control
 - environment-aware runtime configuration for scheduler-friendly execution
+- business analytics summaries for product, customer, and daily revenue insights
 
 The current implementation processes sales CSV data, applies validation and enrichment rules, loads trusted records into SQLite, and writes an execution report that can be used for monitoring or downstream orchestration.
 
@@ -24,6 +25,7 @@ The current implementation processes sales CSV data, applies validation and enri
 - Environment profiles and `ETL_*` overrides for deployment flexibility
 - Runtime metadata such as `run_id`, trigger mode, owner, and schedule details in every run report
 - Dry-run support for orchestration validation without writing to the database
+- Separate sales analytics report with ranked products, ranked customers, daily revenue, and average order value
 - Pytest coverage for transformation rules and end-to-end pipeline execution
 - GitHub Actions workflow for automated validation on pull requests and pushes
 
@@ -36,6 +38,7 @@ The current implementation processes sales CSV data, applies validation and enri
 ├── schema.sql
 ├── src/
 │   ├── configuration.py
+│   ├── analytics.py
 │   ├── extract.py
 │   ├── load.py
 │   ├── models.py
@@ -53,7 +56,9 @@ raw_data_path: data/raw_sales_data.csv
 database_path: artifacts/sales.db
 schema_path: schema.sql
 report_output_path: artifacts/pipeline_run_report.json
+analytics_output_path: artifacts/sales_analytics_report.json
 log_level: INFO
+analytics_top_n: 5
 runtime:
   environment: dev
   owner: analytics-engineering
@@ -68,6 +73,7 @@ environments:
   prod:
     database_path: artifacts/prod/sales.db
     report_output_path: artifacts/prod/pipeline_run_report.json
+    analytics_output_path: artifacts/prod/sales_analytics_report.json
     log_level: INFO
     runtime:
       environment: prod
@@ -95,6 +101,12 @@ You can also override runtime settings without editing the YAML file:
 python3 -m src.pipeline --config config.yaml --report-path /tmp/pipeline-report.json --log-level DEBUG
 ```
 
+To override the analytics report path for a single run:
+
+```bash
+python3 -m src.pipeline --config config.yaml --analytics-report-path /tmp/sales-analytics.json
+```
+
 For scheduler-friendly validation, run the pipeline without loading the database:
 
 ```bash
@@ -113,6 +125,7 @@ The command prints a JSON summary and writes:
 - execution metadata to `artifacts/pipeline_run_report.json`
 - quality metrics and gate results inside the JSON report
 - runtime metadata that makes scheduled or backfill runs easier to trace
+- sales analytics output to `artifacts/sales_analytics_report.json`
 
 ## Test
 ```bash
@@ -123,7 +136,7 @@ pytest -q
 To keep changes incremental and interview-friendly, this project can be upgraded in small phases:
 
 1. Phase 1: strengthen architecture, validation, tests, and reporting
-2. Phase 2: introduce analytics queries, dashboards, or warehouse-oriented outputs
+2. Phase 2: add dashboard-ready exports or a small reporting UI
 3. Phase 3: add containerization, linting, and more production-style developer tooling
 4. Phase 4: add warehouse targets, partitioned datasets, and broader monitoring hooks
 5. Phase 5: add alerting, lineage notes, and broader monitoring integrations

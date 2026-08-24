@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, datetime
+import json
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +27,9 @@ class PipelineConfig:
     database_path: Path
     schema_path: Path
     report_output_path: Path
+    analytics_output_path: Path
     log_level: str = "INFO"
+    analytics_top_n: int = 5
     quality_thresholds: "DataQualityThresholds" | None = None
     runtime: "RuntimeConfig" | None = None
 
@@ -159,6 +162,47 @@ class DataQualitySummary:
 
 
 @dataclass(frozen=True)
+class AnalyticsDimensionMetric:
+    name: str
+    order_count: int
+    quantity_sold: int
+    revenue: float
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "order_count": self.order_count,
+            "quantity_sold": self.quantity_sold,
+            "revenue": self.revenue,
+        }
+
+
+@dataclass(frozen=True)
+class SalesAnalyticsSummary:
+    order_count: int
+    total_quantity: int
+    total_revenue: float
+    average_order_value: float
+    top_products: list[AnalyticsDimensionMetric]
+    top_customers: list[AnalyticsDimensionMetric]
+    daily_revenue: list[AnalyticsDimensionMetric]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "order_count": self.order_count,
+            "total_quantity": self.total_quantity,
+            "total_revenue": self.total_revenue,
+            "average_order_value": self.average_order_value,
+            "top_products": _json_ready(self.top_products),
+            "top_customers": _json_ready(self.top_customers),
+            "daily_revenue": _json_ready(self.daily_revenue),
+        }
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict(), indent=2)
+
+
+@dataclass(frozen=True)
 class RuntimeSummary:
     run_id: str
     environment: str
@@ -190,6 +234,7 @@ class PipelineRunSummary:
     source_path: Path
     database_path: Path
     report_path: Path
+    analytics_report_path: Path
     extracted_count: int
     valid_record_count: int
     loaded_count: int
@@ -199,6 +244,7 @@ class PipelineRunSummary:
     rejected_records: list[RejectedRecord]
     quality_summary: DataQualitySummary
     runtime_summary: RuntimeSummary
+    analytics_summary: SalesAnalyticsSummary
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -208,6 +254,7 @@ class PipelineRunSummary:
             "source_path": _json_ready(self.source_path),
             "database_path": _json_ready(self.database_path),
             "report_path": _json_ready(self.report_path),
+            "analytics_report_path": _json_ready(self.analytics_report_path),
             "extracted_count": self.extracted_count,
             "valid_record_count": self.valid_record_count,
             "loaded_count": self.loaded_count,
@@ -217,4 +264,5 @@ class PipelineRunSummary:
             "rejected_records": _json_ready(self.rejected_records),
             "quality_summary": self.quality_summary.to_dict(),
             "runtime_summary": self.runtime_summary.to_dict(),
+            "analytics_summary": self.analytics_summary.to_dict(),
         }

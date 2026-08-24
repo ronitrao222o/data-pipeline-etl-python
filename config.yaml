@@ -2,7 +2,9 @@ raw_data_path: data/raw_sales_data.csv
 database_path: artifacts/sales.db
 schema_path: schema.sql
 report_output_path: artifacts/pipeline_run_report.json
+analytics_output_path: artifacts/sales_analytics_report.json
 log_level: INFO
+analytics_top_n: 5
 runtime:
   environment: dev
   owner: analytics-engineering
@@ -17,6 +19,7 @@ environments:
   prod:
     database_path: artifacts/prod/sales.db
     report_output_path: artifacts/prod/pipeline_run_report.json
+    analytics_output_path: artifacts/prod/sales_analytics_report.json
     log_level: INFO
     runtime:
       environment: prod

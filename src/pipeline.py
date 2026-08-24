@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
+    from .analytics import build_sales_analytics, write_analytics_report
     from .configuration import load_config
     from .extract import extract_data
     from .load import load_data
@@ -15,6 +16,7 @@ try:
     from .quality import DataQualityError, evaluate_data_quality
     from .transform import transform_data
 except ImportError:  # pragma: no cover - fallback for direct script execution
+    from analytics import build_sales_analytics, write_analytics_report
     from configuration import load_config
     from extract import extract_data
     from load import load_data
@@ -49,6 +51,7 @@ def build_run_summary(
     loaded_count: int,
     quality_summary,
     runtime_summary: RuntimeSummary,
+    analytics_summary,
 ) -> PipelineRunSummary:
     return PipelineRunSummary(
         status=status,
@@ -57,6 +60,7 @@ def build_run_summary(
         source_path=config.raw_data_path,
         database_path=config.database_path,
         report_path=config.report_output_path,
+        analytics_report_path=config.analytics_output_path,
         extracted_count=transformation_result.extracted_count,
         valid_record_count=transformation_result.valid_record_count,
         loaded_count=loaded_count,
@@ -66,6 +70,7 @@ def build_run_summary(
         rejected_records=transformation_result.rejected_records,
         quality_summary=quality_summary,
         runtime_summary=runtime_summary,
+        analytics_summary=analytics_summary,
     )
 
 
@@ -93,6 +98,7 @@ def run_pipeline(
     config_path: str = "config.yaml",
     fail_on_quality_gate: bool = False,
     report_output_path: str | None = None,
+    analytics_output_path: str | None = None,
     log_level: str | None = None,
     environment: str | None = None,
     run_id: str | None = None,
@@ -102,6 +108,8 @@ def run_pipeline(
     config = load_config(config_path, environment=environment)
     if report_output_path:
         config = replace(config, report_output_path=Path(report_output_path).resolve())
+    if analytics_output_path:
+        config = replace(config, analytics_output_path=Path(analytics_output_path).resolve())
     if log_level:
         config = replace(config, log_level=log_level.upper())
 
@@ -131,10 +139,19 @@ def run_pipeline(
         transformation_result,
         config.quality_thresholds,
     )
+    analytics_summary = build_sales_analytics(
+        transformation_result.valid_records,
+        top_n=config.analytics_top_n,
+    )
     logging.info(
         "Quality evaluation completed with status=%s and rejection_rate=%s",
         quality_summary.passed,
         quality_summary.rejection_rate,
+    )
+    logging.info(
+        "Analytics summary built with %s orders and total_revenue=%s",
+        analytics_summary.order_count,
+        analytics_summary.total_revenue,
     )
 
     if fail_on_quality_gate and not quality_summary.passed:
@@ -155,7 +172,9 @@ def run_pipeline(
             loaded_count=0,
             quality_summary=quality_summary,
             runtime_summary=runtime_summary,
+            analytics_summary=analytics_summary,
         )
+        write_analytics_report(analytics_summary, config.analytics_output_path)
         write_run_report(summary)
         logging.error("Data quality gate failed. Load step skipped.")
         raise DataQualityError(summary)
@@ -195,7 +214,9 @@ def run_pipeline(
         loaded_count=loaded_count,
         quality_summary=quality_summary,
         runtime_summary=runtime_summary,
+        analytics_summary=analytics_summary,
     )
+    write_analytics_report(analytics_summary, config.analytics_output_path)
     write_run_report(summary)
 
     logging.info(
@@ -221,6 +242,10 @@ def main() -> int:
     parser.add_argument(
         "--report-path",
         help="Override the JSON report output path for this run",
+    )
+    parser.add_argument(
+        "--analytics-report-path",
+        help="Override the sales analytics JSON output path for this run",
     )
     parser.add_argument(
         "--log-level",
@@ -251,6 +276,7 @@ def main() -> int:
             config_path=args.config,
             fail_on_quality_gate=args.fail_on_quality_gate,
             report_output_path=args.report_path,
+            analytics_output_path=args.analytics_report_path,
             log_level=args.log_level,
             environment=args.environment,
             run_id=args.run_id,
