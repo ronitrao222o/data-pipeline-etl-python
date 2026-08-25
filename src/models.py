@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import date, datetime
-import json
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +10,7 @@ from typing import Any
 def _json_ready(value: Any) -> Any:
     if isinstance(value, Path):
         return str(value)
-    if isinstance(value, (datetime, date)):
+    if isinstance(value, datetime | date):
         return value.isoformat()
     if isinstance(value, list):
         return [_json_ready(item) for item in value]
@@ -30,8 +30,8 @@ class PipelineConfig:
     analytics_output_path: Path
     log_level: str = "INFO"
     analytics_top_n: int = 5
-    quality_thresholds: "DataQualityThresholds" | None = None
-    runtime: "RuntimeConfig" | None = None
+    quality_thresholds: DataQualityThresholds | None = None
+    runtime: RuntimeConfig | None = None
 
 
 @dataclass(frozen=True)

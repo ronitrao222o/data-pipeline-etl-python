@@ -26,6 +26,7 @@ The current implementation processes sales CSV data, applies validation and enri
 - Runtime metadata such as `run_id`, trigger mode, owner, and schedule details in every run report
 - Dry-run support for orchestration validation without writing to the database
 - Separate sales analytics report with ranked products, ranked customers, daily revenue, and average order value
+- Dockerfile, Makefile, Ruff linting, and CI checks for production-style developer workflows
 - Pytest coverage for transformation rules and end-to-end pipeline execution
 - GitHub Actions workflow for automated validation on pull requests and pushes
 
@@ -33,6 +34,8 @@ The current implementation processes sales CSV data, applies validation and enri
 ```text
 .
 ├── .github/workflows/ci.yml
+├── Dockerfile
+├── Makefile
 ├── config.yaml
 ├── data/
 ├── schema.sql
@@ -132,14 +135,30 @@ The command prints a JSON summary and writes:
 pytest -q
 ```
 
+## Developer Workflow
+Use the Makefile for repeatable local commands:
+
+```bash
+make setup
+make lint
+make test
+make dry-run
+```
+
+Run the pipeline in Docker:
+
+```bash
+make docker-run
+```
+
 ## 15-Day Upgrade Roadmap
 To keep changes incremental and interview-friendly, this project can be upgraded in small phases:
 
 1. Phase 1: strengthen architecture, validation, tests, and reporting
 2. Phase 2: add dashboard-ready exports or a small reporting UI
-3. Phase 3: add containerization, linting, and more production-style developer tooling
-4. Phase 4: add warehouse targets, partitioned datasets, and broader monitoring hooks
-5. Phase 5: add alerting, lineage notes, and broader monitoring integrations
+3. Phase 3: add warehouse targets, partitioned datasets, and broader monitoring hooks
+4. Phase 4: add alerting, lineage notes, and broader monitoring integrations
+5. Phase 5: add data contracts, lineage docs, and deployment notes
 
 ## Why This Helps In Placements
 This repo now signals more than just "I can read a CSV." It starts to show engineering judgment around reliability, maintainability, observability, testing, and clean project structure, which are the things interviewers usually look for when they ask about projects.

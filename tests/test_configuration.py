@@ -81,7 +81,8 @@ def test_load_config_applies_env_var_overrides(tmp_path):
     )
 
     assert config.database_path == (tmp_path / "artifacts/override.db").resolve()
-    assert config.analytics_output_path == (tmp_path / "artifacts/override-analytics.json").resolve()
+    expected_analytics_path = (tmp_path / "artifacts/override-analytics.json").resolve()
+    assert config.analytics_output_path == expected_analytics_path
     assert config.runtime.environment == "staging"
     assert config.runtime.owner == "platform-team"
     assert config.runtime.schedule_name == "hourly-validation"

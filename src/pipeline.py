@@ -4,7 +4,7 @@ import argparse
 import json
 import logging
 from dataclasses import replace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 try:
@@ -115,7 +115,7 @@ def run_pipeline(
 
     configure_logging(config.log_level)
 
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now(UTC)
     resolved_run_id = run_id or started_at.strftime("etl-run-%Y%m%d%H%M%S")
     resolved_trigger_mode = trigger_mode or config.runtime.default_trigger_mode
     logging.info("ETL pipeline started")
@@ -155,7 +155,7 @@ def run_pipeline(
     )
 
     if fail_on_quality_gate and not quality_summary.passed:
-        completed_at = datetime.now(timezone.utc)
+        completed_at = datetime.now(UTC)
         runtime_summary = build_runtime_summary(
             config=config,
             run_id=resolved_run_id,
@@ -192,7 +192,7 @@ def run_pipeline(
         )
         logging.info("Load step completed")
 
-    completed_at = datetime.now(timezone.utc)
+    completed_at = datetime.now(UTC)
     status = "dry_run_success" if dry_run and quality_summary.passed else (
         "dry_run_with_quality_warnings" if dry_run else (
             "success" if quality_summary.passed else "completed_with_quality_warnings"
