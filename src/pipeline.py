@@ -10,6 +10,7 @@ from pathlib import Path
 try:
     from .analytics import build_sales_analytics, write_analytics_report
     from .configuration import load_config
+    from .contracts import load_data_contract, validate_raw_contract
     from .extract import extract_data
     from .load import load_data
     from .models import PipelineRunSummary, RuntimeSummary
@@ -18,6 +19,7 @@ try:
 except ImportError:  # pragma: no cover - fallback for direct script execution
     from analytics import build_sales_analytics, write_analytics_report
     from configuration import load_config
+    from contracts import load_data_contract, validate_raw_contract
     from extract import extract_data
     from load import load_data
     from models import PipelineRunSummary, RuntimeSummary
@@ -49,6 +51,7 @@ def build_run_summary(
     config,
     transformation_result,
     loaded_count: int,
+    contract_summary,
     quality_summary,
     runtime_summary: RuntimeSummary,
     analytics_summary,
@@ -68,6 +71,7 @@ def build_run_summary(
         duplicate_order_ids=transformation_result.duplicate_order_ids,
         total_revenue=transformation_result.total_revenue,
         rejected_records=transformation_result.rejected_records,
+        contract_summary=contract_summary,
         quality_summary=quality_summary,
         runtime_summary=runtime_summary,
         analytics_summary=analytics_summary,
@@ -131,6 +135,14 @@ def run_pipeline(
     raw_data = extract_data(config.raw_data_path)
     logging.info("Extract step completed")
 
+    data_contract = load_data_contract(config.data_contract_path)
+    contract_summary = validate_raw_contract(raw_data, data_contract)
+    logging.info(
+        "Contract validation completed with status=%s for dataset=%s",
+        contract_summary.passed,
+        contract_summary.dataset_name,
+    )
+
     logging.info("Starting transform step")
     transformation_result = transform_data(raw_data)
     logging.info("Transform step completed")
@@ -170,6 +182,7 @@ def run_pipeline(
             config=config,
             transformation_result=transformation_result,
             loaded_count=0,
+            contract_summary=contract_summary,
             quality_summary=quality_summary,
             runtime_summary=runtime_summary,
             analytics_summary=analytics_summary,
@@ -212,6 +225,7 @@ def run_pipeline(
         config=config,
         transformation_result=transformation_result,
         loaded_count=loaded_count,
+        contract_summary=contract_summary,
         quality_summary=quality_summary,
         runtime_summary=runtime_summary,
         analytics_summary=analytics_summary,

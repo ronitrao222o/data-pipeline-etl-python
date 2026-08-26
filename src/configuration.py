@@ -14,6 +14,7 @@ except ImportError:  # pragma: no cover - fallback for direct script execution
 
 DEFAULT_CONFIG = {
     "raw_data_path": "data/raw_sales_data.csv",
+    "data_contract_path": "contracts/sales_orders_contract.yaml",
     "database_path": "artifacts/sales.db",
     "schema_path": "schema.sql",
     "report_output_path": "artifacts/pipeline_run_report.json",
@@ -37,6 +38,7 @@ DEFAULT_CONFIG = {
 
 ENVIRONMENT_OVERRIDE_FIELDS = {
     "raw_data_path": "ETL_RAW_DATA_PATH",
+    "data_contract_path": "ETL_DATA_CONTRACT_PATH",
     "database_path": "ETL_DATABASE_PATH",
     "schema_path": "ETL_SCHEMA_PATH",
     "report_output_path": "ETL_REPORT_OUTPUT_PATH",
@@ -128,6 +130,7 @@ def load_config(
 
     return PipelineConfig(
         raw_data_path=_resolve_path(base_dir, str(merged_config["raw_data_path"])),
+        data_contract_path=_resolve_path(base_dir, str(merged_config["data_contract_path"])),
         database_path=_resolve_path(base_dir, str(merged_config["database_path"])),
         schema_path=_resolve_path(base_dir, str(merged_config["schema_path"])),
         report_output_path=_resolve_path(base_dir, str(merged_config["report_output_path"])),

@@ -10,6 +10,7 @@ from src.quality import DataQualityError
 
 def test_run_pipeline_writes_database_and_report(tmp_path):
     schema_path = Path(__file__).resolve().parents[1] / "schema.sql"
+    contract_path = Path(__file__).resolve().parents[1] / "contracts/sales_orders_contract.yaml"
     csv_path = tmp_path / "sales.csv"
     csv_path.write_text(
         "\n".join(
@@ -28,6 +29,7 @@ def test_run_pipeline_writes_database_and_report(tmp_path):
         "\n".join(
             [
                 f"raw_data_path: {csv_path}",
+                f"data_contract_path: {contract_path}",
                 f"database_path: {tmp_path / 'sales.db'}",
                 f"schema_path: {schema_path}",
                 f"report_output_path: {tmp_path / 'report.json'}",
@@ -57,6 +59,9 @@ def test_run_pipeline_writes_database_and_report(tmp_path):
     analytics_report = json.loads((tmp_path / "analytics.json").read_text(encoding="utf-8"))
     assert report["status"] == "success"
     assert report["loaded_count"] == 2
+    assert report["contract_summary"]["passed"] is False
+    assert report["contract_summary"]["dataset_name"] == "sales_orders"
+    assert report["contract_summary"]["duplicate_primary_keys"] == ["202"]
     assert report["quality_summary"]["passed"] is True
     assert report["analytics_summary"]["total_revenue"] == 66000.0
     assert analytics_report["top_products"][0]["name"] == "Laptop"
@@ -64,6 +69,7 @@ def test_run_pipeline_writes_database_and_report(tmp_path):
 
 def test_run_pipeline_returns_warning_status_when_quality_fails(tmp_path):
     schema_path = Path(__file__).resolve().parents[1] / "schema.sql"
+    contract_path = Path(__file__).resolve().parents[1] / "contracts/sales_orders_contract.yaml"
     csv_path = tmp_path / "sales.csv"
     csv_path.write_text(
         "\n".join(
@@ -81,6 +87,7 @@ def test_run_pipeline_returns_warning_status_when_quality_fails(tmp_path):
         "\n".join(
             [
                 f"raw_data_path: {csv_path}",
+                f"data_contract_path: {contract_path}",
                 f"database_path: {tmp_path / 'sales.db'}",
                 f"schema_path: {schema_path}",
                 f"report_output_path: {tmp_path / 'report.json'}",
@@ -104,6 +111,7 @@ def test_run_pipeline_returns_warning_status_when_quality_fails(tmp_path):
 
 def test_run_pipeline_can_fail_on_quality_gate(tmp_path):
     schema_path = Path(__file__).resolve().parents[1] / "schema.sql"
+    contract_path = Path(__file__).resolve().parents[1] / "contracts/sales_orders_contract.yaml"
     csv_path = tmp_path / "sales.csv"
     csv_path.write_text(
         "\n".join(
@@ -121,6 +129,7 @@ def test_run_pipeline_can_fail_on_quality_gate(tmp_path):
         "\n".join(
             [
                 f"raw_data_path: {csv_path}",
+                f"data_contract_path: {contract_path}",
                 f"database_path: {tmp_path / 'sales.db'}",
                 f"schema_path: {schema_path}",
                 f"report_output_path: {tmp_path / 'report.json'}",
@@ -146,6 +155,7 @@ def test_run_pipeline_can_fail_on_quality_gate(tmp_path):
 
 def test_run_pipeline_supports_dry_run_and_runtime_metadata(tmp_path):
     schema_path = Path(__file__).resolve().parents[1] / "schema.sql"
+    contract_path = Path(__file__).resolve().parents[1] / "contracts/sales_orders_contract.yaml"
     csv_path = tmp_path / "sales.csv"
     csv_path.write_text(
         "\n".join(
@@ -163,6 +173,7 @@ def test_run_pipeline_supports_dry_run_and_runtime_metadata(tmp_path):
         "\n".join(
             [
                 f"raw_data_path: {csv_path}",
+                f"data_contract_path: {contract_path}",
                 f"database_path: {tmp_path / 'sales.db'}",
                 f"schema_path: {schema_path}",
                 f"report_output_path: {tmp_path / 'report.json'}",

@@ -1,4 +1,5 @@
 raw_data_path: data/raw_sales_data.csv
+data_contract_path: contracts/sales_orders_contract.yaml
 database_path: artifacts/sales.db
 schema_path: schema.sql
 report_output_path: artifacts/pipeline_run_report.json

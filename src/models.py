@@ -24,6 +24,7 @@ def _json_ready(value: Any) -> Any:
 @dataclass(frozen=True)
 class PipelineConfig:
     raw_data_path: Path
+    data_contract_path: Path
     database_path: Path
     schema_path: Path
     report_output_path: Path
@@ -63,6 +64,62 @@ class RuntimeConfig:
             "default_trigger_mode": self.default_trigger_mode,
             "schedule_name": self.schedule_name,
             "schedule_cron": self.schedule_cron,
+        }
+
+
+@dataclass(frozen=True)
+class ContractColumn:
+    name: str
+    type: str
+    required: bool
+    description: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "required": self.required,
+            "description": self.description,
+        }
+
+
+@dataclass(frozen=True)
+class DataContract:
+    dataset_name: str
+    version: str
+    primary_key: str
+    columns: list[ContractColumn]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dataset_name": self.dataset_name,
+            "version": self.version,
+            "primary_key": self.primary_key,
+            "columns": _json_ready(self.columns),
+        }
+
+
+@dataclass(frozen=True)
+class ContractValidationSummary:
+    dataset_name: str
+    version: str
+    row_count: int
+    expected_columns: list[str]
+    missing_required_columns: list[str]
+    unexpected_columns: list[str]
+    duplicate_primary_keys: list[str]
+    passed: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dataset_name": self.dataset_name,
+            "version": self.version,
+            "row_count": self.row_count,
+            "expected_columns": self.expected_columns,
+            "missing_required_columns": self.missing_required_columns,
+            "unexpected_columns": self.unexpected_columns,
+            "duplicate_primary_keys": self.duplicate_primary_keys,
+            "passed": self.passed,
         }
 
 
@@ -242,6 +299,7 @@ class PipelineRunSummary:
     duplicate_order_ids: list[int]
     total_revenue: float
     rejected_records: list[RejectedRecord]
+    contract_summary: ContractValidationSummary
     quality_summary: DataQualitySummary
     runtime_summary: RuntimeSummary
     analytics_summary: SalesAnalyticsSummary
@@ -262,6 +320,7 @@ class PipelineRunSummary:
             "duplicate_order_ids": self.duplicate_order_ids,
             "total_revenue": self.total_revenue,
             "rejected_records": _json_ready(self.rejected_records),
+            "contract_summary": self.contract_summary.to_dict(),
             "quality_summary": self.quality_summary.to_dict(),
             "runtime_summary": self.runtime_summary.to_dict(),
             "analytics_summary": self.analytics_summary.to_dict(),

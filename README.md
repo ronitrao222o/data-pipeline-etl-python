@@ -12,6 +12,7 @@ This repository is evolving from a starter ETL assignment into a stronger portfo
 - configurable data-quality gates for production-style pipeline control
 - environment-aware runtime configuration for scheduler-friendly execution
 - business analytics summaries for product, customer, and daily revenue insights
+- source data contract and lineage documentation for governance-style clarity
 
 The current implementation processes sales CSV data, applies validation and enrichment rules, loads trusted records into SQLite, and writes an execution report that can be used for monitoring or downstream orchestration.
 
@@ -27,6 +28,7 @@ The current implementation processes sales CSV data, applies validation and enri
 - Dry-run support for orchestration validation without writing to the database
 - Separate sales analytics report with ranked products, ranked customers, daily revenue, and average order value
 - Dockerfile, Makefile, Ruff linting, and CI checks for production-style developer workflows
+- Data contract validation for required columns, unexpected columns, and duplicate primary keys
 - Pytest coverage for transformation rules and end-to-end pipeline execution
 - GitHub Actions workflow for automated validation on pull requests and pushes
 
@@ -37,7 +39,9 @@ The current implementation processes sales CSV data, applies validation and enri
 ├── Dockerfile
 ├── Makefile
 ├── config.yaml
+├── contracts/
 ├── data/
+├── docs/
 ├── schema.sql
 ├── src/
 │   ├── configuration.py
@@ -56,6 +60,7 @@ The pipeline reads runtime settings from `config.yaml`.
 
 ```yaml
 raw_data_path: data/raw_sales_data.csv
+data_contract_path: contracts/sales_orders_contract.yaml
 database_path: artifacts/sales.db
 schema_path: schema.sql
 report_output_path: artifacts/pipeline_run_report.json
@@ -126,6 +131,7 @@ The command prints a JSON summary and writes:
 
 - SQLite output to `artifacts/sales.db`
 - execution metadata to `artifacts/pipeline_run_report.json`
+- contract validation status inside the run report
 - quality metrics and gate results inside the JSON report
 - runtime metadata that makes scheduled or backfill runs easier to trace
 - sales analytics output to `artifacts/sales_analytics_report.json`
@@ -151,14 +157,18 @@ Run the pipeline in Docker:
 make docker-run
 ```
 
+## Data Governance
+The source contract lives in `contracts/sales_orders_contract.yaml`.
+The documentation in `docs/data_contract.md` and `docs/lineage.md` explains the expected source schema, primary key, transformations, and generated artifacts.
+
 ## 15-Day Upgrade Roadmap
 To keep changes incremental and interview-friendly, this project can be upgraded in small phases:
 
 1. Phase 1: strengthen architecture, validation, tests, and reporting
 2. Phase 2: add dashboard-ready exports or a small reporting UI
 3. Phase 3: add warehouse targets, partitioned datasets, and broader monitoring hooks
-4. Phase 4: add alerting, lineage notes, and broader monitoring integrations
-5. Phase 5: add data contracts, lineage docs, and deployment notes
+4. Phase 4: add alerting and broader monitoring integrations
+5. Phase 5: add dashboard-ready exports and deployment notes
 
 ## Why This Helps In Placements
 This repo now signals more than just "I can read a CSV." It starts to show engineering judgment around reliability, maintainability, observability, testing, and clean project structure, which are the things interviewers usually look for when they ask about projects.

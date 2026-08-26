@@ -1,0 +1,29 @@
+dataset_name: sales_orders
+version: "1.0"
+description: Raw sales orders ingested by the ETL pipeline.
+primary_key: order_id
+columns:
+  - name: order_id
+    type: integer
+    required: true
+    description: Unique order identifier from the source sales system.
+  - name: customer_id
+    type: string
+    required: true
+    description: Customer identifier attached to the order.
+  - name: order_date
+    type: date
+    required: true
+    description: Order date in YYYY-MM-DD format.
+  - name: product
+    type: string
+    required: true
+    description: Product name sold in the order.
+  - name: quantity
+    type: integer
+    required: true
+    description: Number of units sold.
+  - name: price
+    type: number
+    required: true
+    description: Unit price for the product.

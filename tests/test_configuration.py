@@ -9,6 +9,7 @@ def test_load_config_applies_environment_profile(tmp_path):
         "\n".join(
             [
                 "raw_data_path: data/source.csv",
+                "data_contract_path: contracts/sales_contract.yaml",
                 "database_path: artifacts/default.db",
                 "schema_path: schema.sql",
                 "report_output_path: artifacts/default-report.json",
@@ -21,6 +22,7 @@ def test_load_config_applies_environment_profile(tmp_path):
                 "  schedule_name: adhoc",
                 "environments:",
                 "  prod:",
+                "    data_contract_path: contracts/prod_sales_contract.yaml",
                 "    database_path: artifacts/prod.db",
                 "    report_output_path: artifacts/prod-report.json",
                 "    analytics_output_path: artifacts/prod-analytics.json",
@@ -37,6 +39,7 @@ def test_load_config_applies_environment_profile(tmp_path):
 
     config = load_config(str(config_path), environment="prod")
 
+    assert config.data_contract_path == (tmp_path / "contracts/prod_sales_contract.yaml").resolve()
     assert config.database_path == (tmp_path / "artifacts/prod.db").resolve()
     assert config.report_output_path == (tmp_path / "artifacts/prod-report.json").resolve()
     assert config.analytics_output_path == (tmp_path / "artifacts/prod-analytics.json").resolve()
@@ -54,6 +57,7 @@ def test_load_config_applies_env_var_overrides(tmp_path):
         "\n".join(
             [
                 "raw_data_path: data/source.csv",
+                "data_contract_path: contracts/sales_contract.yaml",
                 "database_path: artifacts/default.db",
                 f"schema_path: {schema_path}",
                 "report_output_path: artifacts/default-report.json",
@@ -72,6 +76,7 @@ def test_load_config_applies_env_var_overrides(tmp_path):
         str(config_path),
         env={
             "ETL_ENVIRONMENT": "staging",
+            "ETL_DATA_CONTRACT_PATH": "contracts/override_contract.yaml",
             "ETL_DATABASE_PATH": "artifacts/override.db",
             "ETL_ANALYTICS_OUTPUT_PATH": "artifacts/override-analytics.json",
             "ETL_OWNER": "platform-team",
@@ -80,6 +85,7 @@ def test_load_config_applies_env_var_overrides(tmp_path):
         },
     )
 
+    assert config.data_contract_path == (tmp_path / "contracts/override_contract.yaml").resolve()
     assert config.database_path == (tmp_path / "artifacts/override.db").resolve()
     expected_analytics_path = (tmp_path / "artifacts/override-analytics.json").resolve()
     assert config.analytics_output_path == expected_analytics_path
