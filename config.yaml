@@ -4,6 +4,7 @@ database_path: artifacts/sales.db
 schema_path: schema.sql
 report_output_path: artifacts/pipeline_run_report.json
 analytics_output_path: artifacts/sales_analytics_report.json
+warehouse_output_path: artifacts/warehouse/sales
 log_level: INFO
 analytics_top_n: 5
 runtime:
@@ -21,6 +22,7 @@ environments:
     database_path: artifacts/prod/sales.db
     report_output_path: artifacts/prod/pipeline_run_report.json
     analytics_output_path: artifacts/prod/sales_analytics_report.json
+    warehouse_output_path: artifacts/prod/warehouse/sales
     log_level: INFO
     runtime:
       environment: prod

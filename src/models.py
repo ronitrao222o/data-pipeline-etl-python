@@ -29,6 +29,7 @@ class PipelineConfig:
     schema_path: Path
     report_output_path: Path
     analytics_output_path: Path
+    warehouse_output_path: Path
     log_level: str = "INFO"
     analytics_top_n: int = 5
     quality_thresholds: DataQualityThresholds | None = None
@@ -260,6 +261,42 @@ class SalesAnalyticsSummary:
 
 
 @dataclass(frozen=True)
+class WarehouseExportPartition:
+    partition_value: str
+    path: Path
+    record_count: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "partition_value": self.partition_value,
+            "path": _json_ready(self.path),
+            "record_count": self.record_count,
+        }
+
+
+@dataclass(frozen=True)
+class WarehouseExportSummary:
+    output_path: Path
+    manifest_path: Path
+    partition_column: str
+    partition_count: int
+    exported_record_count: int
+    skipped: bool
+    partitions: list[WarehouseExportPartition]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "output_path": _json_ready(self.output_path),
+            "manifest_path": _json_ready(self.manifest_path),
+            "partition_column": self.partition_column,
+            "partition_count": self.partition_count,
+            "exported_record_count": self.exported_record_count,
+            "skipped": self.skipped,
+            "partitions": _json_ready(self.partitions),
+        }
+
+
+@dataclass(frozen=True)
 class RuntimeSummary:
     run_id: str
     environment: str
@@ -303,6 +340,7 @@ class PipelineRunSummary:
     quality_summary: DataQualitySummary
     runtime_summary: RuntimeSummary
     analytics_summary: SalesAnalyticsSummary
+    warehouse_export_summary: WarehouseExportSummary
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -324,4 +362,5 @@ class PipelineRunSummary:
             "quality_summary": self.quality_summary.to_dict(),
             "runtime_summary": self.runtime_summary.to_dict(),
             "analytics_summary": self.analytics_summary.to_dict(),
+            "warehouse_export_summary": self.warehouse_export_summary.to_dict(),
         }

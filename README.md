@@ -27,6 +27,7 @@ The current implementation processes sales CSV data, applies validation and enri
 - Runtime metadata such as `run_id`, trigger mode, owner, and schedule details in every run report
 - Dry-run support for orchestration validation without writing to the database
 - Separate sales analytics report with ranked products, ranked customers, daily revenue, and average order value
+- Partitioned warehouse-style CSV exports with manifest metadata
 - Dockerfile, Makefile, Ruff linting, and CI checks for production-style developer workflows
 - Data contract validation for required columns, unexpected columns, and duplicate primary keys
 - Pytest coverage for transformation rules and end-to-end pipeline execution
@@ -65,6 +66,7 @@ database_path: artifacts/sales.db
 schema_path: schema.sql
 report_output_path: artifacts/pipeline_run_report.json
 analytics_output_path: artifacts/sales_analytics_report.json
+warehouse_output_path: artifacts/warehouse/sales
 log_level: INFO
 analytics_top_n: 5
 runtime:
@@ -82,6 +84,7 @@ environments:
     database_path: artifacts/prod/sales.db
     report_output_path: artifacts/prod/pipeline_run_report.json
     analytics_output_path: artifacts/prod/sales_analytics_report.json
+    warehouse_output_path: artifacts/prod/warehouse/sales
     log_level: INFO
     runtime:
       environment: prod
@@ -115,6 +118,12 @@ To override the analytics report path for a single run:
 python3 -m src.pipeline --config config.yaml --analytics-report-path /tmp/sales-analytics.json
 ```
 
+To override the warehouse export path for a single run:
+
+```bash
+python3 -m src.pipeline --config config.yaml --warehouse-output-path /tmp/sales-warehouse
+```
+
 For scheduler-friendly validation, run the pipeline without loading the database:
 
 ```bash
@@ -135,6 +144,7 @@ The command prints a JSON summary and writes:
 - quality metrics and gate results inside the JSON report
 - runtime metadata that makes scheduled or backfill runs easier to trace
 - sales analytics output to `artifacts/sales_analytics_report.json`
+- partitioned warehouse CSV output to `artifacts/warehouse/sales`
 
 ## Test
 ```bash
@@ -159,7 +169,7 @@ make docker-run
 
 ## Data Governance
 The source contract lives in `contracts/sales_orders_contract.yaml`.
-The documentation in `docs/data_contract.md` and `docs/lineage.md` explains the expected source schema, primary key, transformations, and generated artifacts.
+The documentation in `docs/data_contract.md`, `docs/lineage.md`, and `docs/warehouse_exports.md` explains the expected source schema, primary key, transformations, generated artifacts, and partitioned export layout.
 
 ## 15-Day Upgrade Roadmap
 To keep changes incremental and interview-friendly, this project can be upgraded in small phases:

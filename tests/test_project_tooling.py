@@ -11,6 +11,7 @@ def test_project_has_container_and_command_tooling():
     assert (ROOT_DIR / "contracts/sales_orders_contract.yaml").exists()
     assert (ROOT_DIR / "docs/data_contract.md").exists()
     assert (ROOT_DIR / "docs/lineage.md").exists()
+    assert (ROOT_DIR / "docs/warehouse_exports.md").exists()
 
     dockerfile = (ROOT_DIR / "Dockerfile").read_text(encoding="utf-8")
     makefile = (ROOT_DIR / "Makefile").read_text(encoding="utf-8")

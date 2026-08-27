@@ -16,6 +16,7 @@ try:
     from .models import PipelineRunSummary, RuntimeSummary
     from .quality import DataQualityError, evaluate_data_quality
     from .transform import transform_data
+    from .warehouse import export_partitioned_sales
 except ImportError:  # pragma: no cover - fallback for direct script execution
     from analytics import build_sales_analytics, write_analytics_report
     from configuration import load_config
@@ -25,6 +26,7 @@ except ImportError:  # pragma: no cover - fallback for direct script execution
     from models import PipelineRunSummary, RuntimeSummary
     from quality import DataQualityError, evaluate_data_quality
     from transform import transform_data
+    from warehouse import export_partitioned_sales
 
 
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
@@ -55,6 +57,7 @@ def build_run_summary(
     quality_summary,
     runtime_summary: RuntimeSummary,
     analytics_summary,
+    warehouse_export_summary,
 ) -> PipelineRunSummary:
     return PipelineRunSummary(
         status=status,
@@ -75,6 +78,7 @@ def build_run_summary(
         quality_summary=quality_summary,
         runtime_summary=runtime_summary,
         analytics_summary=analytics_summary,
+        warehouse_export_summary=warehouse_export_summary,
     )
 
 
@@ -103,6 +107,7 @@ def run_pipeline(
     fail_on_quality_gate: bool = False,
     report_output_path: str | None = None,
     analytics_output_path: str | None = None,
+    warehouse_output_path: str | None = None,
     log_level: str | None = None,
     environment: str | None = None,
     run_id: str | None = None,
@@ -114,6 +119,8 @@ def run_pipeline(
         config = replace(config, report_output_path=Path(report_output_path).resolve())
     if analytics_output_path:
         config = replace(config, analytics_output_path=Path(analytics_output_path).resolve())
+    if warehouse_output_path:
+        config = replace(config, warehouse_output_path=Path(warehouse_output_path).resolve())
     if log_level:
         config = replace(config, log_level=log_level.upper())
 
@@ -155,6 +162,12 @@ def run_pipeline(
         transformation_result.valid_records,
         top_n=config.analytics_top_n,
     )
+    warehouse_export_summary = export_partitioned_sales(
+        transformation_result.valid_records,
+        output_path=config.warehouse_output_path,
+        run_id=resolved_run_id,
+        dry_run=dry_run or (fail_on_quality_gate and not quality_summary.passed),
+    )
     logging.info(
         "Quality evaluation completed with status=%s and rejection_rate=%s",
         quality_summary.passed,
@@ -164,6 +177,11 @@ def run_pipeline(
         "Analytics summary built with %s orders and total_revenue=%s",
         analytics_summary.order_count,
         analytics_summary.total_revenue,
+    )
+    logging.info(
+        "Warehouse export summary built with %s exported rows across %s partitions",
+        warehouse_export_summary.exported_record_count,
+        warehouse_export_summary.partition_count,
     )
 
     if fail_on_quality_gate and not quality_summary.passed:
@@ -186,6 +204,7 @@ def run_pipeline(
             quality_summary=quality_summary,
             runtime_summary=runtime_summary,
             analytics_summary=analytics_summary,
+            warehouse_export_summary=warehouse_export_summary,
         )
         write_analytics_report(analytics_summary, config.analytics_output_path)
         write_run_report(summary)
@@ -229,6 +248,7 @@ def run_pipeline(
         quality_summary=quality_summary,
         runtime_summary=runtime_summary,
         analytics_summary=analytics_summary,
+        warehouse_export_summary=warehouse_export_summary,
     )
     write_analytics_report(analytics_summary, config.analytics_output_path)
     write_run_report(summary)
@@ -262,6 +282,10 @@ def main() -> int:
         help="Override the sales analytics JSON output path for this run",
     )
     parser.add_argument(
+        "--warehouse-output-path",
+        help="Override the partitioned warehouse export output path for this run",
+    )
+    parser.add_argument(
         "--log-level",
         help="Override the configured log level for this run",
     )
@@ -291,6 +315,7 @@ def main() -> int:
             fail_on_quality_gate=args.fail_on_quality_gate,
             report_output_path=args.report_path,
             analytics_output_path=args.analytics_report_path,
+            warehouse_output_path=args.warehouse_output_path,
             log_level=args.log_level,
             environment=args.environment,
             run_id=args.run_id,
