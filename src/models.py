@@ -29,6 +29,7 @@ class PipelineConfig:
     schema_path: Path
     report_output_path: Path
     analytics_output_path: Path
+    profile_output_path: Path
     warehouse_output_path: Path
     log_level: str = "INFO"
     analytics_top_n: int = 5
@@ -261,6 +262,47 @@ class SalesAnalyticsSummary:
 
 
 @dataclass(frozen=True)
+class ColumnProfile:
+    name: str
+    inferred_type: str
+    null_count: int
+    null_rate: float
+    distinct_count: int
+    min_value: Any | None
+    max_value: Any | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "inferred_type": self.inferred_type,
+            "null_count": self.null_count,
+            "null_rate": self.null_rate,
+            "distinct_count": self.distinct_count,
+            "min_value": _json_ready(self.min_value),
+            "max_value": _json_ready(self.max_value),
+        }
+
+
+@dataclass(frozen=True)
+class DataProfileSummary:
+    dataset_name: str
+    row_count: int
+    column_count: int
+    columns: list[ColumnProfile]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "dataset_name": self.dataset_name,
+            "row_count": self.row_count,
+            "column_count": self.column_count,
+            "columns": _json_ready(self.columns),
+        }
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict(), indent=2)
+
+
+@dataclass(frozen=True)
 class WarehouseExportPartition:
     partition_value: str
     path: Path
@@ -329,6 +371,7 @@ class PipelineRunSummary:
     database_path: Path
     report_path: Path
     analytics_report_path: Path
+    profile_report_path: Path
     extracted_count: int
     valid_record_count: int
     loaded_count: int
@@ -340,6 +383,7 @@ class PipelineRunSummary:
     quality_summary: DataQualitySummary
     runtime_summary: RuntimeSummary
     analytics_summary: SalesAnalyticsSummary
+    data_profile_summary: DataProfileSummary
     warehouse_export_summary: WarehouseExportSummary
 
     def to_dict(self) -> dict[str, Any]:
@@ -351,6 +395,7 @@ class PipelineRunSummary:
             "database_path": _json_ready(self.database_path),
             "report_path": _json_ready(self.report_path),
             "analytics_report_path": _json_ready(self.analytics_report_path),
+            "profile_report_path": _json_ready(self.profile_report_path),
             "extracted_count": self.extracted_count,
             "valid_record_count": self.valid_record_count,
             "loaded_count": self.loaded_count,
@@ -362,5 +407,6 @@ class PipelineRunSummary:
             "quality_summary": self.quality_summary.to_dict(),
             "runtime_summary": self.runtime_summary.to_dict(),
             "analytics_summary": self.analytics_summary.to_dict(),
+            "data_profile_summary": self.data_profile_summary.to_dict(),
             "warehouse_export_summary": self.warehouse_export_summary.to_dict(),
         }

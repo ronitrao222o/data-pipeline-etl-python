@@ -14,6 +14,7 @@ def test_load_config_applies_environment_profile(tmp_path):
                 "schema_path: schema.sql",
                 "report_output_path: artifacts/default-report.json",
                 "analytics_output_path: artifacts/default-analytics.json",
+                "profile_output_path: artifacts/default-profile.json",
                 "warehouse_output_path: artifacts/default-warehouse",
                 "analytics_top_n: 3",
                 "runtime:",
@@ -27,6 +28,7 @@ def test_load_config_applies_environment_profile(tmp_path):
                 "    database_path: artifacts/prod.db",
                 "    report_output_path: artifacts/prod-report.json",
                 "    analytics_output_path: artifacts/prod-analytics.json",
+                "    profile_output_path: artifacts/prod-profile.json",
                 "    warehouse_output_path: artifacts/prod-warehouse",
                 "    analytics_top_n: 7",
                 "    log_level: WARNING",
@@ -45,6 +47,7 @@ def test_load_config_applies_environment_profile(tmp_path):
     assert config.database_path == (tmp_path / "artifacts/prod.db").resolve()
     assert config.report_output_path == (tmp_path / "artifacts/prod-report.json").resolve()
     assert config.analytics_output_path == (tmp_path / "artifacts/prod-analytics.json").resolve()
+    assert config.profile_output_path == (tmp_path / "artifacts/prod-profile.json").resolve()
     assert config.warehouse_output_path == (tmp_path / "artifacts/prod-warehouse").resolve()
     assert config.analytics_top_n == 7
     assert config.log_level == "WARNING"
@@ -65,6 +68,7 @@ def test_load_config_applies_env_var_overrides(tmp_path):
                 f"schema_path: {schema_path}",
                 "report_output_path: artifacts/default-report.json",
                 "analytics_output_path: artifacts/default-analytics.json",
+                "profile_output_path: artifacts/default-profile.json",
                 "warehouse_output_path: artifacts/default-warehouse",
                 "runtime:",
                 "  environment: dev",
@@ -83,6 +87,7 @@ def test_load_config_applies_env_var_overrides(tmp_path):
             "ETL_DATA_CONTRACT_PATH": "contracts/override_contract.yaml",
             "ETL_DATABASE_PATH": "artifacts/override.db",
             "ETL_ANALYTICS_OUTPUT_PATH": "artifacts/override-analytics.json",
+            "ETL_PROFILE_OUTPUT_PATH": "artifacts/override-profile.json",
             "ETL_WAREHOUSE_OUTPUT_PATH": "artifacts/override-warehouse",
             "ETL_OWNER": "platform-team",
             "ETL_SCHEDULE_NAME": "hourly-validation",
@@ -94,6 +99,7 @@ def test_load_config_applies_env_var_overrides(tmp_path):
     assert config.database_path == (tmp_path / "artifacts/override.db").resolve()
     expected_analytics_path = (tmp_path / "artifacts/override-analytics.json").resolve()
     assert config.analytics_output_path == expected_analytics_path
+    assert config.profile_output_path == (tmp_path / "artifacts/override-profile.json").resolve()
     assert config.warehouse_output_path == (tmp_path / "artifacts/override-warehouse").resolve()
     assert config.runtime.environment == "staging"
     assert config.runtime.owner == "platform-team"

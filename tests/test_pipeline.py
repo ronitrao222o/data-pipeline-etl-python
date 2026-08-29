@@ -34,6 +34,7 @@ def test_run_pipeline_writes_database_and_report(tmp_path):
                 f"schema_path: {schema_path}",
                 f"report_output_path: {tmp_path / 'report.json'}",
                 f"analytics_output_path: {tmp_path / 'analytics.json'}",
+                f"profile_output_path: {tmp_path / 'profile.json'}",
                 f"warehouse_output_path: {tmp_path / 'warehouse'}",
                 "log_level: INFO",
                 "quality_thresholds:",
@@ -58,6 +59,7 @@ def test_run_pipeline_writes_database_and_report(tmp_path):
 
     report = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
     analytics_report = json.loads((tmp_path / "analytics.json").read_text(encoding="utf-8"))
+    profile_report = json.loads((tmp_path / "profile.json").read_text(encoding="utf-8"))
     warehouse_manifest = json.loads(
         (tmp_path / "warehouse/_manifest.json").read_text(encoding="utf-8")
     )
@@ -68,7 +70,10 @@ def test_run_pipeline_writes_database_and_report(tmp_path):
     assert report["contract_summary"]["duplicate_primary_keys"] == ["202"]
     assert report["quality_summary"]["passed"] is True
     assert report["analytics_summary"]["total_revenue"] == 66000.0
+    assert report["data_profile_summary"]["row_count"] == 2
     assert analytics_report["top_products"][0]["name"] == "Laptop"
+    assert profile_report["dataset_name"] == "sales_orders"
+    assert profile_report["row_count"] == 2
     assert report["warehouse_export_summary"]["exported_record_count"] == 2
     assert warehouse_manifest["partition_column"] == "order_month"
 
@@ -98,6 +103,7 @@ def test_run_pipeline_returns_warning_status_when_quality_fails(tmp_path):
                 f"schema_path: {schema_path}",
                 f"report_output_path: {tmp_path / 'report.json'}",
                 f"analytics_output_path: {tmp_path / 'analytics.json'}",
+                f"profile_output_path: {tmp_path / 'profile.json'}",
                 f"warehouse_output_path: {tmp_path / 'warehouse'}",
                 "log_level: INFO",
                 "quality_thresholds:",
@@ -141,6 +147,7 @@ def test_run_pipeline_can_fail_on_quality_gate(tmp_path):
                 f"schema_path: {schema_path}",
                 f"report_output_path: {tmp_path / 'report.json'}",
                 f"analytics_output_path: {tmp_path / 'analytics.json'}",
+                f"profile_output_path: {tmp_path / 'profile.json'}",
                 f"warehouse_output_path: {tmp_path / 'warehouse'}",
                 "log_level: INFO",
                 "quality_thresholds:",
@@ -158,8 +165,10 @@ def test_run_pipeline_can_fail_on_quality_gate(tmp_path):
     assert error.value.summary.status == "quality_gate_failed"
     assert error.value.summary.quality_summary.passed is False
     assert error.value.summary.loaded_count == 0
+    assert error.value.summary.data_profile_summary.row_count == 1
     assert error.value.summary.warehouse_export_summary.skipped is True
     assert (tmp_path / "analytics.json").exists()
+    assert (tmp_path / "profile.json").exists()
     assert not (tmp_path / "warehouse").exists()
 
 
@@ -188,6 +197,7 @@ def test_run_pipeline_supports_dry_run_and_runtime_metadata(tmp_path):
                 f"schema_path: {schema_path}",
                 f"report_output_path: {tmp_path / 'report.json'}",
                 f"analytics_output_path: {tmp_path / 'analytics.json'}",
+                f"profile_output_path: {tmp_path / 'profile.json'}",
                 f"warehouse_output_path: {tmp_path / 'warehouse'}",
                 "log_level: INFO",
                 "runtime:",
@@ -220,6 +230,8 @@ def test_run_pipeline_supports_dry_run_and_runtime_metadata(tmp_path):
     assert summary.runtime_summary.dry_run is True
     assert summary.runtime_summary.load_step_skipped is True
     assert summary.analytics_summary.total_revenue == 66000.0
+    assert summary.data_profile_summary.row_count == 2
     assert summary.warehouse_export_summary.skipped is True
+    assert (tmp_path / "profile.json").exists()
     assert not (tmp_path / "sales.db").exists()
     assert not (tmp_path / "warehouse").exists()

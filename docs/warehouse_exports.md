@@ -29,5 +29,5 @@ This keeps the export easy to inspect locally while showing a common pattern use
 
 ## Runtime Behavior
 - Normal runs write partition files and a manifest
-- `--dry-run` skips partition file generation
-- failed quality gates skip partition file generation
+- `--dry-run` skips partition file generation while still writing run, analytics, and profile reports
+- failed quality gates skip partition file generation while still writing diagnostics

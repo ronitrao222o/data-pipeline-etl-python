@@ -1,7 +1,7 @@
 # Data Lineage
 
 ## Flow
-`data/raw_sales_data.csv` -> extract -> contract validation -> transform -> quality checks -> analytics -> warehouse export -> SQLite load -> JSON reports
+`data/raw_sales_data.csv` -> extract -> contract validation -> transform -> profile -> quality checks -> analytics -> warehouse export -> SQLite load -> JSON reports
 
 ## Inputs
 - `data/raw_sales_data.csv`: source sales orders
@@ -16,11 +16,12 @@
 
 ## Outputs
 - `artifacts/sales.db`: trusted sales records in SQLite
-- `artifacts/pipeline_run_report.json`: run metadata, quality results, contract results, and analytics summary
+- `artifacts/pipeline_run_report.json`: run metadata, quality results, contract results, analytics summary, and profile summary
 - `artifacts/sales_analytics_report.json`: ranked product, customer, and daily revenue metrics
+- `artifacts/data_profile_report.json`: column-level completeness, cardinality, and range metrics
 - `artifacts/warehouse/sales`: partitioned CSV files and manifest metadata
 
 ## Operational Notes
-- `--dry-run` validates extract, contract, transform, quality, and analytics without loading SQLite or warehouse exports
+- `--dry-run` validates extract, contract, transform, profiling, quality, and analytics without loading SQLite or warehouse exports
 - `--fail-on-quality-gate` blocks loading and warehouse exports when quality thresholds fail
 - Environment profiles and `ETL_*` variables make the same pipeline portable across local and scheduled runs
