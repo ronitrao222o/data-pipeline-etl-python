@@ -14,6 +14,7 @@ try:
     from .extract import extract_data
     from .load import load_data
     from .models import PipelineRunSummary, RuntimeSummary
+    from .monitoring import build_monitoring_summary, write_monitoring_report
     from .profiling import build_data_profile, write_profile_report
     from .quality import DataQualityError, evaluate_data_quality
     from .transform import transform_data
@@ -25,6 +26,7 @@ except ImportError:  # pragma: no cover - fallback for direct script execution
     from extract import extract_data
     from load import load_data
     from models import PipelineRunSummary, RuntimeSummary
+    from monitoring import build_monitoring_summary, write_monitoring_report
     from profiling import build_data_profile, write_profile_report
     from quality import DataQualityError, evaluate_data_quality
     from transform import transform_data
@@ -60,6 +62,7 @@ def build_run_summary(
     runtime_summary: RuntimeSummary,
     analytics_summary,
     data_profile_summary,
+    monitoring_summary,
     warehouse_export_summary,
 ) -> PipelineRunSummary:
     return PipelineRunSummary(
@@ -71,6 +74,7 @@ def build_run_summary(
         report_path=config.report_output_path,
         analytics_report_path=config.analytics_output_path,
         profile_report_path=config.profile_output_path,
+        monitoring_report_path=config.monitoring_output_path,
         extracted_count=transformation_result.extracted_count,
         valid_record_count=transformation_result.valid_record_count,
         loaded_count=loaded_count,
@@ -83,6 +87,7 @@ def build_run_summary(
         runtime_summary=runtime_summary,
         analytics_summary=analytics_summary,
         data_profile_summary=data_profile_summary,
+        monitoring_summary=monitoring_summary,
         warehouse_export_summary=warehouse_export_summary,
     )
 
@@ -113,6 +118,7 @@ def run_pipeline(
     report_output_path: str | None = None,
     analytics_output_path: str | None = None,
     profile_output_path: str | None = None,
+    monitoring_output_path: str | None = None,
     warehouse_output_path: str | None = None,
     log_level: str | None = None,
     environment: str | None = None,
@@ -127,6 +133,8 @@ def run_pipeline(
         config = replace(config, analytics_output_path=Path(analytics_output_path).resolve())
     if profile_output_path:
         config = replace(config, profile_output_path=Path(profile_output_path).resolve())
+    if monitoring_output_path:
+        config = replace(config, monitoring_output_path=Path(monitoring_output_path).resolve())
     if warehouse_output_path:
         config = replace(config, warehouse_output_path=Path(warehouse_output_path).resolve())
     if log_level:
@@ -203,6 +211,7 @@ def run_pipeline(
 
     if fail_on_quality_gate and not quality_summary.passed:
         completed_at = datetime.now(UTC)
+        run_status = "quality_gate_failed"
         runtime_summary = build_runtime_summary(
             config=config,
             run_id=resolved_run_id,
@@ -210,8 +219,19 @@ def run_pipeline(
             dry_run=dry_run,
             load_step_skipped=True,
         )
+        monitoring_summary = build_monitoring_summary(
+            run_status=run_status,
+            valid_record_count=transformation_result.valid_record_count,
+            rejected_record_count=transformation_result.rejected_record_count,
+            contract_summary=contract_summary,
+            quality_summary=quality_summary,
+            data_profile_summary=data_profile_summary,
+            warehouse_export_summary=warehouse_export_summary,
+            dry_run=dry_run,
+            fail_on_quality_gate=fail_on_quality_gate,
+        )
         summary = build_run_summary(
-            status="quality_gate_failed",
+            status=run_status,
             started_at=started_at,
             completed_at=completed_at,
             config=config,
@@ -222,10 +242,12 @@ def run_pipeline(
             runtime_summary=runtime_summary,
             analytics_summary=analytics_summary,
             data_profile_summary=data_profile_summary,
+            monitoring_summary=monitoring_summary,
             warehouse_export_summary=warehouse_export_summary,
         )
         write_analytics_report(analytics_summary, config.analytics_output_path)
         write_profile_report(data_profile_summary, config.profile_output_path)
+        write_monitoring_report(monitoring_summary, config.monitoring_output_path)
         write_run_report(summary)
         logging.error("Data quality gate failed. Load step skipped.")
         raise DataQualityError(summary)
@@ -256,6 +278,17 @@ def run_pipeline(
         dry_run=dry_run,
         load_step_skipped=load_step_skipped,
     )
+    monitoring_summary = build_monitoring_summary(
+        run_status=status,
+        valid_record_count=transformation_result.valid_record_count,
+        rejected_record_count=transformation_result.rejected_record_count,
+        contract_summary=contract_summary,
+        quality_summary=quality_summary,
+        data_profile_summary=data_profile_summary,
+        warehouse_export_summary=warehouse_export_summary,
+        dry_run=dry_run,
+        fail_on_quality_gate=fail_on_quality_gate,
+    )
     summary = build_run_summary(
         status=status,
         started_at=started_at,
@@ -268,10 +301,12 @@ def run_pipeline(
         runtime_summary=runtime_summary,
         analytics_summary=analytics_summary,
         data_profile_summary=data_profile_summary,
+        monitoring_summary=monitoring_summary,
         warehouse_export_summary=warehouse_export_summary,
     )
     write_analytics_report(analytics_summary, config.analytics_output_path)
     write_profile_report(data_profile_summary, config.profile_output_path)
+    write_monitoring_report(monitoring_summary, config.monitoring_output_path)
     write_run_report(summary)
 
     logging.info(
@@ -305,6 +340,10 @@ def main() -> int:
     parser.add_argument(
         "--profile-report-path",
         help="Override the data profile JSON output path for this run",
+    )
+    parser.add_argument(
+        "--monitoring-report-path",
+        help="Override the monitoring JSON output path for this run",
     )
     parser.add_argument(
         "--warehouse-output-path",
@@ -341,6 +380,7 @@ def main() -> int:
             report_output_path=args.report_path,
             analytics_output_path=args.analytics_report_path,
             profile_output_path=args.profile_report_path,
+            monitoring_output_path=args.monitoring_report_path,
             warehouse_output_path=args.warehouse_output_path,
             log_level=args.log_level,
             environment=args.environment,

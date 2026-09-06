@@ -30,6 +30,7 @@ class PipelineConfig:
     report_output_path: Path
     analytics_output_path: Path
     profile_output_path: Path
+    monitoring_output_path: Path
     warehouse_output_path: Path
     log_level: str = "INFO"
     analytics_top_n: int = 5
@@ -339,6 +340,45 @@ class WarehouseExportSummary:
 
 
 @dataclass(frozen=True)
+class MonitoringAlert:
+    rule: str
+    severity: str
+    message: str
+    actual_value: Any
+    expected_value: Any
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "rule": self.rule,
+            "severity": self.severity,
+            "message": self.message,
+            "actual_value": _json_ready(self.actual_value),
+            "expected_value": _json_ready(self.expected_value),
+        }
+
+
+@dataclass(frozen=True)
+class MonitoringSummary:
+    status: str
+    alert_count: int
+    critical_alert_count: int
+    warning_alert_count: int
+    alerts: list[MonitoringAlert]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "alert_count": self.alert_count,
+            "critical_alert_count": self.critical_alert_count,
+            "warning_alert_count": self.warning_alert_count,
+            "alerts": _json_ready(self.alerts),
+        }
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict(), indent=2)
+
+
+@dataclass(frozen=True)
 class RuntimeSummary:
     run_id: str
     environment: str
@@ -372,6 +412,7 @@ class PipelineRunSummary:
     report_path: Path
     analytics_report_path: Path
     profile_report_path: Path
+    monitoring_report_path: Path
     extracted_count: int
     valid_record_count: int
     loaded_count: int
@@ -384,6 +425,7 @@ class PipelineRunSummary:
     runtime_summary: RuntimeSummary
     analytics_summary: SalesAnalyticsSummary
     data_profile_summary: DataProfileSummary
+    monitoring_summary: MonitoringSummary
     warehouse_export_summary: WarehouseExportSummary
 
     def to_dict(self) -> dict[str, Any]:
@@ -396,6 +438,7 @@ class PipelineRunSummary:
             "report_path": _json_ready(self.report_path),
             "analytics_report_path": _json_ready(self.analytics_report_path),
             "profile_report_path": _json_ready(self.profile_report_path),
+            "monitoring_report_path": _json_ready(self.monitoring_report_path),
             "extracted_count": self.extracted_count,
             "valid_record_count": self.valid_record_count,
             "loaded_count": self.loaded_count,
@@ -408,5 +451,6 @@ class PipelineRunSummary:
             "runtime_summary": self.runtime_summary.to_dict(),
             "analytics_summary": self.analytics_summary.to_dict(),
             "data_profile_summary": self.data_profile_summary.to_dict(),
+            "monitoring_summary": self.monitoring_summary.to_dict(),
             "warehouse_export_summary": self.warehouse_export_summary.to_dict(),
         }

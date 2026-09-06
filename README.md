@@ -12,9 +12,10 @@ This repository is evolving from a starter ETL assignment into a stronger portfo
 - configurable data-quality gates for production-style pipeline control
 - environment-aware runtime configuration for scheduler-friendly execution
 - business analytics summaries for product, customer, and daily revenue insights
+- monitoring reports with alert severity for operational readiness
 - source data contract and lineage documentation for governance-style clarity
 
-The current implementation processes sales CSV data, applies validation and enrichment rules, loads trusted records into SQLite, and writes an execution report that can be used for monitoring or downstream orchestration.
+The current implementation processes sales CSV data, applies validation and enrichment rules, loads trusted records into SQLite, writes warehouse-style exports, and publishes multiple JSON artifacts for analytics, profiling, monitoring, and orchestration.
 
 ## What Makes This Better Than a Basic ETL Script
 - Configurable input, schema, database, report, and logging paths through `config.yaml`
@@ -29,6 +30,7 @@ The current implementation processes sales CSV data, applies validation and enri
 - Separate sales analytics report with ranked products, ranked customers, daily revenue, and average order value
 - Column-level data profile report with type inference, null rates, distinct counts, and min/max values
 - Partitioned warehouse-style CSV exports with manifest metadata
+- Monitoring report with `healthy`, `warning`, and `critical` statuses for runbook-style operations
 - Dockerfile, Makefile, Ruff linting, and CI checks for production-style developer workflows
 - Data contract validation for required columns, unexpected columns, and duplicate primary keys
 - Pytest coverage for transformation rules and end-to-end pipeline execution
@@ -51,6 +53,7 @@ The current implementation processes sales CSV data, applies validation and enri
 │   ├── extract.py
 │   ├── load.py
 │   ├── models.py
+│   ├── monitoring.py
 │   ├── pipeline.py
 │   ├── profiling.py
 │   ├── quality.py
@@ -70,6 +73,7 @@ schema_path: schema.sql
 report_output_path: artifacts/pipeline_run_report.json
 analytics_output_path: artifacts/sales_analytics_report.json
 profile_output_path: artifacts/data_profile_report.json
+monitoring_output_path: artifacts/monitoring_report.json
 warehouse_output_path: artifacts/warehouse/sales
 log_level: INFO
 analytics_top_n: 5
@@ -89,6 +93,7 @@ environments:
     report_output_path: artifacts/prod/pipeline_run_report.json
     analytics_output_path: artifacts/prod/sales_analytics_report.json
     profile_output_path: artifacts/prod/data_profile_report.json
+    monitoring_output_path: artifacts/prod/monitoring_report.json
     warehouse_output_path: artifacts/prod/warehouse/sales
     log_level: INFO
     runtime:
@@ -129,6 +134,12 @@ To override the data profile path for a single run:
 python3 -m src.pipeline --config config.yaml --profile-report-path /tmp/sales-profile.json
 ```
 
+To override the monitoring report path for a single run:
+
+```bash
+python3 -m src.pipeline --config config.yaml --monitoring-report-path /tmp/sales-monitoring.json
+```
+
 To override the warehouse export path for a single run:
 
 ```bash
@@ -156,6 +167,7 @@ The command prints a JSON summary and writes:
 - runtime metadata that makes scheduled or backfill runs easier to trace
 - sales analytics output to `artifacts/sales_analytics_report.json`
 - data profiling output to `artifacts/data_profile_report.json`
+- monitoring output to `artifacts/monitoring_report.json`
 - partitioned warehouse CSV output to `artifacts/warehouse/sales`
 
 ## Test
@@ -181,16 +193,13 @@ make docker-run
 
 ## Data Governance
 The source contract lives in `contracts/sales_orders_contract.yaml`.
-The documentation in `docs/data_contract.md`, `docs/data_profile.md`, `docs/lineage.md`, and `docs/warehouse_exports.md` explains the expected source schema, primary key, transformations, generated artifacts, profiling output, and partitioned export layout.
+The documentation in `docs/data_contract.md`, `docs/data_profile.md`, `docs/lineage.md`, `docs/operations.md`, and `docs/warehouse_exports.md` explains the expected source schema, primary key, transformations, generated artifacts, profiling output, operational checks, and partitioned export layout.
 
-## 15-Day Upgrade Roadmap
-To keep changes incremental and interview-friendly, this project can be upgraded in small phases:
-
-1. Phase 1: strengthen architecture, validation, tests, and reporting
-2. Phase 2: add dashboard-ready exports or a small reporting UI
-3. Phase 3: add warehouse targets, partitioned datasets, and broader monitoring hooks
-4. Phase 4: add alerting and broader monitoring integrations
-5. Phase 5: add dashboard-ready exports and deployment notes
+## Portfolio Talking Points
+- Reliability: quality gates, contract validation, transactional loading, and rejected-record tracking
+- Observability: run reports, analytics summaries, data profiles, monitoring alerts, and lineage docs
+- Operability: environment profiles, dry runs, CLI overrides, Docker support, Makefile commands, and a runbook
+- Testing: unit and end-to-end tests around transformation, quality, contracts, analytics, profiling, warehouse exports, and pipeline execution
 
 ## Why This Helps In Placements
-This repo now signals more than just "I can read a CSV." It starts to show engineering judgment around reliability, maintainability, observability, testing, and clean project structure, which are the things interviewers usually look for when they ask about projects.
+This repo now signals more than just "I can read a CSV." It shows engineering judgment around reliability, maintainability, observability, testing, and clean project structure, which are the things interviewers usually look for when they ask about projects.

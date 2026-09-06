@@ -20,6 +20,7 @@ DEFAULT_CONFIG = {
     "report_output_path": "artifacts/pipeline_run_report.json",
     "analytics_output_path": "artifacts/sales_analytics_report.json",
     "profile_output_path": "artifacts/data_profile_report.json",
+    "monitoring_output_path": "artifacts/monitoring_report.json",
     "warehouse_output_path": "artifacts/warehouse/sales",
     "log_level": "INFO",
     "analytics_top_n": 5,
@@ -46,6 +47,7 @@ ENVIRONMENT_OVERRIDE_FIELDS = {
     "report_output_path": "ETL_REPORT_OUTPUT_PATH",
     "analytics_output_path": "ETL_ANALYTICS_OUTPUT_PATH",
     "profile_output_path": "ETL_PROFILE_OUTPUT_PATH",
+    "monitoring_output_path": "ETL_MONITORING_OUTPUT_PATH",
     "warehouse_output_path": "ETL_WAREHOUSE_OUTPUT_PATH",
     "log_level": "ETL_LOG_LEVEL",
 }
@@ -140,6 +142,10 @@ def load_config(
         report_output_path=_resolve_path(base_dir, str(merged_config["report_output_path"])),
         analytics_output_path=_resolve_path(base_dir, str(merged_config["analytics_output_path"])),
         profile_output_path=_resolve_path(base_dir, str(merged_config["profile_output_path"])),
+        monitoring_output_path=_resolve_path(
+            base_dir,
+            str(merged_config["monitoring_output_path"]),
+        ),
         warehouse_output_path=_resolve_path(base_dir, str(merged_config["warehouse_output_path"])),
         log_level=str(merged_config["log_level"]).upper(),
         analytics_top_n=int(merged_config["analytics_top_n"]),
