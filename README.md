@@ -119,6 +119,8 @@ python3 -m src.pipeline --config config.yaml --environment prod --trigger-mode m
 
 A successful demo loads 10 trusted rows, writes analytics/profile/monitoring reports, and exports warehouse-style CSV files under `artifacts/prod/`.
 
+After the run, verify `pipeline_run_report.json`, `monitoring_report.json`, `sales.db`, and the warehouse `_manifest.json` to confirm the pipeline worked end to end.
+
 To enforce the quality gate and fail the run when configured thresholds are violated:
 
 ```bash
