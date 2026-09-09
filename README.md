@@ -110,6 +110,15 @@ pip install -r requirements.txt
 python3 -m src.pipeline --config config.yaml
 ```
 
+## Quick Demo
+Run the project in the production profile with scheduler-style metadata:
+
+```bash
+python3 -m src.pipeline --config config.yaml --environment prod --trigger-mode manual --run-id demo-run-001
+```
+
+A successful demo loads 10 trusted rows, writes analytics/profile/monitoring reports, and exports warehouse-style CSV files under `artifacts/prod/`.
+
 To enforce the quality gate and fail the run when configured thresholds are violated:
 
 ```bash
