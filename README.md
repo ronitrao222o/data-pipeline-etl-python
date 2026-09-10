@@ -212,5 +212,8 @@ The documentation in `docs/data_contract.md`, `docs/data_profile.md`, `docs/line
 - Operability: environment profiles, dry runs, CLI overrides, Docker support, Makefile commands, and a runbook
 - Testing: unit and end-to-end tests around transformation, quality, contracts, analytics, profiling, warehouse exports, and pipeline execution
 
+## Interview Summary
+This project demonstrates how raw CSV sales data can be converted into trusted, validated, report-ready data using a maintainable Python ETL workflow with database loading, quality checks, analytics, profiling, monitoring, and automated tests.
+
 ## Why This Helps In Placements
 This repo now signals more than just "I can read a CSV." It shows engineering judgment around reliability, maintainability, observability, testing, and clean project structure, which are the things interviewers usually look for when they ask about projects.
