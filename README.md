@@ -215,5 +215,10 @@ The documentation in `docs/data_contract.md`, `docs/data_profile.md`, `docs/line
 ## Interview Summary
 This project demonstrates how raw CSV sales data can be converted into trusted, validated, report-ready data using a maintainable Python ETL workflow with database loading, quality checks, analytics, profiling, monitoring, and automated tests.
 
+## Resume Alignment
+This project supports resume claims around Python ETL development, CSV ingestion, malformed-record validation, derived feature creation, SQLite loading, YAML configuration, standardized logging, exception handling, and Pytest-based verification.
+
+Use the quick demo command above to show the complete flow from raw sales data to database rows, JSON reports, monitoring output, and warehouse-style exports.
+
 ## Why This Helps In Placements
 This repo now signals more than just "I can read a CSV." It shows engineering judgment around reliability, maintainability, observability, testing, and clean project structure, which are the things interviewers usually look for when they ask about projects.
