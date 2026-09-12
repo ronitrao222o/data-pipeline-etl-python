@@ -181,6 +181,15 @@ The command prints a JSON summary and writes:
 - monitoring output to `artifacts/monitoring_report.json`
 - partitioned warehouse CSV output to `artifacts/warehouse/sales`
 
+## Inspect Loaded Data
+After running the pipeline, inspect the SQLite output with:
+
+```bash
+sqlite3 artifacts/prod/sales.db "SELECT product, ROUND(SUM(total_amount), 2) AS revenue FROM sales GROUP BY product ORDER BY revenue DESC;"
+```
+
+More useful validation queries are documented in `docs/sql_queries.md`.
+
 ## Test
 ```bash
 pytest -q
