@@ -229,5 +229,12 @@ This project supports resume claims around Python ETL development, CSV ingestion
 
 Use the quick demo command above to show the complete flow from raw sales data to database rows, JSON reports, monitoring output, and warehouse-style exports.
 
+## Interview Demo Flow
+1. Show `data/raw_sales_data.csv` as the raw input.
+2. Run the quick demo command to execute the full ETL flow.
+3. Open the run, analytics, profile, and monitoring reports to explain observability.
+4. Query `artifacts/prod/sales.db` to prove trusted rows were loaded.
+5. Open the warehouse manifest to show partitioned export output.
+
 ## Why This Helps In Placements
 This repo now signals more than just "I can read a CSV." It shows engineering judgment around reliability, maintainability, observability, testing, and clean project structure, which are the things interviewers usually look for when they ask about projects.
