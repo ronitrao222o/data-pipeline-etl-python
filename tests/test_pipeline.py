@@ -8,7 +8,8 @@ from src.pipeline import run_pipeline
 from src.quality import DataQualityError
 
 
-def test_run_pipeline_writes_database_and_report(tmp_path):
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
+def test_run_pipeline_writes_database_and_report(tmp_path, encoding):
     schema_path = Path(__file__).resolve().parents[1] / "schema.sql"
     contract_path = Path(__file__).resolve().parents[1] / "contracts/sales_orders_contract.yaml"
     csv_path = tmp_path / "sales.csv"
@@ -21,7 +22,7 @@ def test_run_pipeline_writes_database_and_report(tmp_path):
                 "202,C011,2024-02-03,Mouse,1,500",
             ]
         ),
-        encoding="utf-8",
+        encoding=encoding,
     )
 
     config_path = tmp_path / "config.yaml"
