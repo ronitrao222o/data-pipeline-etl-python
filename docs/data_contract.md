@@ -19,6 +19,9 @@
 | `price` | number | Unit price for the product. |
 
 ## Runtime Validation
+CSV column names must be unique. Extraction rejects duplicate headers with an error
+listing the repeated names, preventing values from being silently overwritten.
+
 The pipeline validates the raw CSV against this contract immediately after extraction.
 The run report includes:
 
