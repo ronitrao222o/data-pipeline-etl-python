@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from datetime import datetime
 
 try:
@@ -60,6 +61,16 @@ def transform_data(raw_data: list[dict[str, str]]) -> TransformationResult:
                 RejectedRecord(
                     row_number=row_number,
                     reason="Quantity must be greater than zero",
+                    payload=row,
+                )
+            )
+            continue
+
+        if not math.isfinite(price):
+            rejected_records.append(
+                RejectedRecord(
+                    row_number=row_number,
+                    reason="Price must be a finite number",
                     payload=row,
                 )
             )

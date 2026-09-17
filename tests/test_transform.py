@@ -1,4 +1,46 @@
+import pytest
+
 from src.transform import transform_data
+
+
+@pytest.mark.parametrize("price", ["NaN", "nan", "inf", "-inf", "Infinity", "1e309"])
+def test_transform_rejects_non_finite_price_without_reserving_order_id(price):
+    row = {
+        "order_id": "1",
+        "customer_id": "C001",
+        "order_date": "2024-01-01",
+        "product": "Laptop",
+        "quantity": "2",
+        "price": price,
+    }
+
+    result = transform_data([row, {**row, "price": "500.0"}])
+
+    assert result.valid_record_count == 1
+    assert result.valid_records[0]["total_amount"] == 1000.0
+    assert result.duplicate_order_ids == []
+    assert result.rejected_record_count == 1
+    rejected = result.rejected_records[0]
+    assert rejected.reason == "Price must be a finite number"
+    assert rejected.row_number == 2
+    assert rejected.payload == row
+
+
+def test_transform_accepts_zero_price():
+    result = transform_data([
+        {
+            "order_id": "1",
+            "customer_id": "C001",
+            "order_date": "2024-01-01",
+            "product": "Free sample",
+            "quantity": "2",
+            "price": "0",
+        }
+    ])
+
+    assert result.valid_record_count == 1
+    assert result.rejected_record_count == 0
+    assert result.valid_records[0]["total_amount"] == 0.0
 
 
 def test_transform_valid_record():
