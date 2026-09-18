@@ -20,7 +20,11 @@ REQUIRED_FIELDS = [
 
 
 def _missing_required_fields(row: dict[str, str]) -> list[str]:
-    return [field for field in REQUIRED_FIELDS if not row.get(field)]
+    return [
+        field
+        for field in REQUIRED_FIELDS
+        if not row.get(field) or (isinstance(row[field], str) and not row[field].strip())
+    ]
 
 
 def transform_data(raw_data: list[dict[str, str]]) -> TransformationResult:
