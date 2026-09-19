@@ -69,6 +69,10 @@ Input CSV files must use UTF-8 encoding. UTF-8 files with a byte-order mark (BOM
 such as Excel CSV UTF-8 exports, are also supported; the marker is removed before
 reading column names.
 
+Rows with more values than the CSV header defines stop extraction with an error
+showing the file, line number, and expected and actual column counts. Quote values
+that contain commas (for example, `"Laptop, premium"`) to keep them in one column.
+
 ```yaml
 raw_data_path: data/raw_sales_data.csv
 data_contract_path: contracts/sales_orders_contract.yaml

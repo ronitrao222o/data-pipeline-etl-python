@@ -24,7 +24,16 @@ def extract_data(file_path: str | Path) -> list[dict[str, str]]:
                     f"{', '.join(duplicate_headers)}"
                 )
 
-            data = list(reader)
+            data = []
+            for record in reader:
+                if None in record:
+                    raise ValueError(
+                        f"Input file {path} contains extra CSV values "
+                        f"at line {reader.line_num}: expected {len(reader.fieldnames)} columns, "
+                        f"got {len(reader.fieldnames) + len(record[None])}"
+                    )
+                data.append(record)
+
             logging.info("Successfully extracted %s rows from %s", len(data), path)
             return data
 
