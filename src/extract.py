@@ -15,6 +15,17 @@ def extract_data(file_path: str | Path) -> list[dict[str, str]]:
             if not reader.fieldnames:
                 raise ValueError(f"Input file {path} does not contain a CSV header row")
 
+            blank_columns = [
+                str(position)
+                for position, name in enumerate(reader.fieldnames, start=1)
+                if not name.strip()
+            ]
+            if blank_columns:
+                raise ValueError(
+                    f"Input file {path} contains blank CSV headers at columns: "
+                    f"{', '.join(blank_columns)}"
+                )
+
             duplicate_headers = sorted(
                 name for name, count in Counter(reader.fieldnames).items() if count > 1
             )

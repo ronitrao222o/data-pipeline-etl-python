@@ -4,6 +4,28 @@ from src.extract import extract_data
 
 
 @pytest.mark.parametrize(
+    ("contents", "columns"),
+    [
+        ("order_id,,price\n1,Mouse,100\n", "2"),
+        ("order_id,product,\n1,Mouse,100\n", "3"),
+        ("order_id, \t,price\n1,Mouse,100\n", "2"),
+        ("order_id,\n", "2"),
+        (",product,\n1,Mouse,100\n", "1, 3"),
+    ],
+)
+def test_extract_data_rejects_blank_headers(tmp_path, contents, columns):
+    csv_path = tmp_path / "sales.csv"
+    csv_path.write_text(contents, encoding="utf-8")
+
+    with pytest.raises(ValueError) as error:
+        extract_data(csv_path)
+
+    assert str(error.value) == (
+        f"Input file {csv_path} contains blank CSV headers at columns: {columns}"
+    )
+
+
+@pytest.mark.parametrize(
     ("contents", "line_number", "column_count"),
     [
         ("order_id,product\n1,Mouse,unexpected\n", 2, 3),
