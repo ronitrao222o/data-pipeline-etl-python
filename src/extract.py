@@ -11,7 +11,7 @@ def extract_data(file_path: str | Path) -> list[dict[str, str]]:
 
     try:
         with path.open(mode="r", encoding="utf-8-sig", newline="") as file:
-            reader = csv.DictReader(file)
+            reader = csv.DictReader(file, strict=True)
             if not reader.fieldnames:
                 raise ValueError(f"Input file {path} does not contain a CSV header row")
 

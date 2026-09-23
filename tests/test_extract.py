@@ -1,6 +1,41 @@
+import csv
+
 import pytest
 
 from src.extract import extract_data
+
+
+@pytest.mark.parametrize(
+    "contents",
+    [
+        'order_id,product\n1,"Unclosed product\n',
+        'order_id,product\n1,"Mouse"unexpected\n',
+        'order_id,"product\n1,Mouse\n',
+        'order_id,product\n1,Mouse\n2,"Unclosed product\n',
+    ],
+)
+def test_extract_data_rejects_malformed_quoting(tmp_path, contents):
+    csv_path = tmp_path / "sales.csv"
+    csv_path.write_text(contents, encoding="utf-8")
+
+    with pytest.raises(csv.Error):
+        extract_data(csv_path)
+
+
+@pytest.mark.parametrize(
+    ("contents", "product"),
+    [
+        ('order_id,product\n1,"Mouse, premium"\n', "Mouse, premium"),
+        ('order_id,product\n1,"Mouse\npremium"\n', "Mouse\npremium"),
+        ('order_id,product\n1,"Mouse ""Pro"""\n', 'Mouse "Pro"'),
+        ('order_id,product\n1,"Mouse"', "Mouse"),
+    ],
+)
+def test_extract_data_preserves_valid_quoted_fields(tmp_path, contents, product):
+    csv_path = tmp_path / "sales.csv"
+    csv_path.write_text(contents, encoding="utf-8")
+
+    assert extract_data(csv_path) == [{"order_id": "1", "product": product}]
 
 
 @pytest.mark.parametrize(
