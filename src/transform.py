@@ -101,6 +101,20 @@ def transform_data(raw_data: list[dict[str, str]]) -> TransformationResult:
             )
             continue
 
+        try:
+            total_amount = round(quantity * price, 2)
+            if not math.isfinite(total_amount):
+                raise ValueError("Non-finite total")
+        except (OverflowError, ValueError):
+            rejected_records.append(
+                RejectedRecord(
+                    row_number=row_number,
+                    reason="Total amount must be a finite number",
+                    payload=row,
+                )
+            )
+            continue
+
         seen_order_ids.add(order_id)
         transformed.append(
             {
@@ -110,7 +124,7 @@ def transform_data(raw_data: list[dict[str, str]]) -> TransformationResult:
                 "product": row["product"].strip(),
                 "quantity": quantity,
                 "price": price,
-                "total_amount": round(quantity * price, 2),
+                "total_amount": total_amount,
             }
         )
 

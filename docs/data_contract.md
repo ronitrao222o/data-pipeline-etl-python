@@ -26,6 +26,10 @@ Extraction uses strict CSV parsing to reject malformed quoting, such as an
 unclosed quoted field. Valid quoted commas, multiline fields, and escaped quotes
 remain supported. Parsing errors are logged with the input file path.
 
+During transformation, prices and derived totals must be finite numbers. Records
+whose quantity-times-price calculation overflows are rejected with a reason in
+the rejected-record report, allowing remaining records to be processed.
+
 The pipeline validates the raw CSV against this contract immediately after extraction.
 The run report includes:
 

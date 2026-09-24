@@ -3,6 +3,32 @@ import pytest
 from src.transform import transform_data
 
 
+@pytest.mark.parametrize(
+    ("quantity", "price"),
+    [("2", "1e308"), ("1" + "0" * 400, "1.0")],
+)
+def test_transform_rejects_total_overflow_and_continues(quantity, price):
+    row = {
+        "order_id": "1",
+        "customer_id": "C001",
+        "order_date": "2024-01-01",
+        "product": "Laptop",
+        "quantity": quantity,
+        "price": price,
+    }
+
+    result = transform_data([row, {**row, "quantity": "2", "price": "500.0"}])
+
+    assert result.valid_record_count == 1
+    assert result.valid_records[0]["total_amount"] == 1000.0
+    assert result.duplicate_order_ids == []
+    assert result.rejected_record_count == 1
+    rejected = result.rejected_records[0]
+    assert rejected.reason == "Total amount must be a finite number"
+    assert rejected.row_number == 2
+    assert rejected.payload == row
+
+
 @pytest.mark.parametrize("price", ["NaN", "nan", "inf", "-inf", "Infinity", "1e309"])
 def test_transform_rejects_non_finite_price_without_reserving_order_id(price):
     row = {
