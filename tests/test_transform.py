@@ -1,6 +1,51 @@
+import sqlite3
+from pathlib import Path
+
 import pytest
 
+from src.load import load_data
 from src.transform import transform_data
+
+
+@pytest.mark.parametrize("order_id", [str(-(2**63) - 1), str(2**63), "9" * 100])
+def test_transform_rejects_order_id_outside_sqlite_range(order_id):
+    row = {
+        "order_id": order_id,
+        "customer_id": "C001",
+        "order_date": "2024-01-01",
+        "product": "Laptop",
+        "quantity": "2",
+        "price": "500.0",
+    }
+
+    result = transform_data([row, {**row, "order_id": "1"}])
+
+    assert [record["order_id"] for record in result.valid_records] == [1]
+    assert result.rejected_record_count == 1
+    assert result.duplicate_order_ids == []
+    rejected = result.rejected_records[0]
+    assert rejected.reason == "Order ID must fit in a signed 64-bit SQLite integer"
+    assert rejected.row_number == 2
+    assert rejected.payload == row
+
+
+@pytest.mark.parametrize("order_id", [-(2**63), 2**63 - 1])
+def test_transform_sqlite_order_id_boundaries_can_be_loaded(tmp_path, order_id):
+    result = transform_data([{
+        "order_id": str(order_id),
+        "customer_id": "C001",
+        "order_date": "2024-01-01",
+        "product": "Laptop",
+        "quantity": "2",
+        "price": "500.0",
+    }])
+    database_path = tmp_path / "sales.db"
+    schema_path = Path(__file__).resolve().parents[1] / "schema.sql"
+
+    assert result.rejected_record_count == 0
+    assert load_data(result.valid_records, database_path, schema_path) == 1
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute("SELECT order_id FROM sales").fetchall() == [(order_id,)]
 
 
 @pytest.mark.parametrize(
