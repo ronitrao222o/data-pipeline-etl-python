@@ -30,6 +30,10 @@ During transformation, prices and derived totals must be finite numbers. Records
 whose quantity-times-price calculation overflows are rejected with a reason in
 the rejected-record report, allowing remaining records to be processed.
 
+Order IDs must fit in SQLite's signed 64-bit integer range. Quantities must be
+between `1` and `9223372036854775807`, inclusive. Out-of-range values are rejected
+during transformation so they cannot cause an integer overflow during loading.
+
 The pipeline validates the raw CSV against this contract immediately after extraction.
 The run report includes:
 

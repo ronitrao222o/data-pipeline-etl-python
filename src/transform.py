@@ -70,6 +70,16 @@ def transform_data(raw_data: list[dict[str, str]]) -> TransformationResult:
             )
             continue
 
+        if quantity > 2**63 - 1:
+            rejected_records.append(
+                RejectedRecord(
+                    row_number=row_number,
+                    reason="Quantity must fit in a signed 64-bit SQLite integer",
+                    payload=row,
+                )
+            )
+            continue
+
         if quantity <= 0:
             rejected_records.append(
                 RejectedRecord(

@@ -48,11 +48,9 @@ def test_transform_sqlite_order_id_boundaries_can_be_loaded(tmp_path, order_id):
         assert connection.execute("SELECT order_id FROM sales").fetchall() == [(order_id,)]
 
 
-@pytest.mark.parametrize(
-    ("quantity", "price"),
-    [("2", "1e308"), ("1" + "0" * 400, "1.0")],
-)
-def test_transform_rejects_total_overflow_and_continues(quantity, price):
+@pytest.mark.parametrize("quantity", [str(2**63), "1" + "0" * 400])
+@pytest.mark.parametrize("price", ["0", "1.0"])
+def test_transform_rejects_quantity_outside_sqlite_range(quantity, price):
     row = {
         "order_id": "1",
         "customer_id": "C001",
@@ -60,6 +58,47 @@ def test_transform_rejects_total_overflow_and_continues(quantity, price):
         "product": "Laptop",
         "quantity": quantity,
         "price": price,
+    }
+
+    result = transform_data([row, {**row, "quantity": "2"}])
+
+    assert result.valid_record_count == 1
+    assert result.valid_records[0]["quantity"] == 2
+    assert result.duplicate_order_ids == []
+    assert result.rejected_record_count == 1
+    rejected = result.rejected_records[0]
+    assert rejected.reason == "Quantity must fit in a signed 64-bit SQLite integer"
+    assert rejected.row_number == 2
+    assert rejected.payload == row
+
+
+@pytest.mark.parametrize("quantity", [1, 2**63 - 1])
+def test_transform_sqlite_quantity_boundaries_can_be_loaded(tmp_path, quantity):
+    result = transform_data([{
+        "order_id": "1",
+        "customer_id": "C001",
+        "order_date": "2024-01-01",
+        "product": "Laptop",
+        "quantity": str(quantity),
+        "price": "1.0",
+    }])
+    database_path = tmp_path / "sales.db"
+    schema_path = Path(__file__).resolve().parents[1] / "schema.sql"
+
+    assert result.rejected_record_count == 0
+    assert load_data(result.valid_records, database_path, schema_path) == 1
+    with sqlite3.connect(database_path) as connection:
+        assert connection.execute("SELECT quantity FROM sales").fetchall() == [(quantity,)]
+
+
+def test_transform_rejects_total_overflow_and_continues():
+    row = {
+        "order_id": "1",
+        "customer_id": "C001",
+        "order_date": "2024-01-01",
+        "product": "Laptop",
+        "quantity": "2",
+        "price": "1e308",
     }
 
     result = transform_data([row, {**row, "quantity": "2", "price": "500.0"}])
