@@ -55,10 +55,7 @@ def evaluate_data_quality(
 ) -> DataQualitySummary:
     valid_records = transformation_result.valid_records
     extracted_count = max(transformation_result.extracted_count, 1)
-    rejection_rate = round(
-        transformation_result.rejected_record_count / extracted_count,
-        4,
-    )
+    rejection_rate = transformation_result.rejected_record_count / extracted_count
     duplicate_record_count = len(transformation_result.duplicate_order_ids)
     unique_customer_count = len({record["customer_id"] for record in valid_records})
     unique_product_count = len({record["product"] for record in valid_records})
