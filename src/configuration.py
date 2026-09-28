@@ -113,7 +113,7 @@ def load_config(
     env: dict[str, str] | None = None,
 ) -> PipelineConfig:
     config_path = Path(path).resolve()
-    env = env or dict(os.environ)
+    env = dict(os.environ) if env is None else env
 
     with config_path.open("r", encoding="utf-8") as file:
         raw_config: dict[str, Any] = yaml.safe_load(file) or {}

@@ -3,6 +3,35 @@ from pathlib import Path
 from src.configuration import load_config
 
 
+def test_load_config_empty_env_ignores_process_overrides(tmp_path, monkeypatch):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("database_path: artifacts/local.db\n", encoding="utf-8")
+    monkeypatch.setenv("ETL_DATABASE_PATH", "artifacts/process.db")
+    monkeypatch.setenv("ETL_ENVIRONMENT", "prod")
+    monkeypatch.setenv("ETL_MAX_REJECTION_RATE", "0.9")
+
+    config = load_config(str(config_path), env={})
+
+    assert config.database_path == (tmp_path / "artifacts/local.db").resolve()
+    assert config.runtime.environment == "dev"
+    assert config.quality_thresholds.max_rejection_rate == 0.2
+
+
+def test_load_config_default_env_reads_process_overrides(tmp_path, monkeypatch):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("database_path: artifacts/local.db\n", encoding="utf-8")
+    monkeypatch.setenv("ETL_DATABASE_PATH", "artifacts/process.db")
+    monkeypatch.setenv("ETL_ENVIRONMENT", "prod")
+    monkeypatch.setenv("ETL_MAX_REJECTION_RATE", "0.9")
+
+    for kwargs in ({}, {"env": None}):
+        config = load_config(str(config_path), **kwargs)
+
+        assert config.database_path == (tmp_path / "artifacts/process.db").resolve()
+        assert config.runtime.environment == "prod"
+        assert config.quality_thresholds.max_rejection_rate == 0.9
+
+
 def test_load_config_applies_environment_profile(tmp_path):
     config_path = tmp_path / "config.yaml"
     config_path.write_text(
