@@ -155,7 +155,7 @@ def load_config(
             max_duplicate_records=int(quality_thresholds["max_duplicate_records"]),
         ),
         runtime=RuntimeConfig(
-            environment=str(runtime_config["environment"]),
+            environment=str(active_environment),
             owner=str(runtime_config["owner"]),
             default_trigger_mode=str(runtime_config["default_trigger_mode"]),
             schedule_name=str(runtime_config["schedule_name"]),

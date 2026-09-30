@@ -1,6 +1,31 @@
 from pathlib import Path
 
+import pytest
+
 from src.configuration import load_config
+
+
+@pytest.mark.parametrize(
+    ("environment", "env"),
+    [("prod", {}), ("prod", {"ETL_ENVIRONMENT": "staging"}), (None, {"ETL_ENVIRONMENT": "prod"})],
+)
+def test_load_config_reports_selected_environment(tmp_path, environment, env):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        "runtime:\n"
+        "  environment: dev\n"
+        "environments:\n"
+        "  prod:\n"
+        "    database_path: artifacts/prod.db\n"
+        "  staging:\n"
+        "    database_path: artifacts/staging.db\n",
+        encoding="utf-8",
+    )
+
+    config = load_config(str(config_path), environment=environment, env=env)
+
+    assert config.database_path == (tmp_path / "artifacts/prod.db").resolve()
+    assert config.runtime.environment == "prod"
 
 
 def test_load_config_empty_env_ignores_process_overrides(tmp_path, monkeypatch):
