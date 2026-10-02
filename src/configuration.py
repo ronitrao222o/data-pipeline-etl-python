@@ -116,7 +116,14 @@ def load_config(
     env = dict(os.environ) if env is None else env
 
     with config_path.open("r", encoding="utf-8") as file:
-        raw_config: dict[str, Any] = yaml.safe_load(file) or {}
+        raw_config = yaml.safe_load(file)
+    if raw_config is None:
+        raw_config = {}
+    if not isinstance(raw_config, dict):
+        raise ValueError(
+            f"Configuration file {config_path} must contain a YAML mapping "
+            "of setting names to values"
+        )
 
     requested_environment = environment or env.get("ETL_ENVIRONMENT")
     base_config = _merge_nested_config(DEFAULT_CONFIG, raw_config)

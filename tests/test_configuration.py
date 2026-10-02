@@ -5,6 +5,32 @@ import pytest
 from src.configuration import load_config
 
 
+@pytest.mark.parametrize("contents", ["[]", "[dev, prod]", "false", "0", "settings"])
+def test_load_config_rejects_non_mapping_yaml(tmp_path, contents):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(contents, encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must contain a YAML mapping") as error:
+        load_config(str(config_path), env={})
+
+    assert str(config_path) in str(error.value)
+
+
+@pytest.mark.parametrize("contents", ["", "# No overrides\n", "null", "{}"])
+def test_load_config_empty_yaml_uses_defaults(tmp_path, contents):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(contents, encoding="utf-8")
+
+    config = load_config(str(config_path), env={})
+
+    assert config.database_path == (tmp_path / "artifacts/sales.db").resolve()
+    assert config.runtime.environment == "dev"
+    assert config.quality_thresholds.min_valid_records == 3
+    assert config.quality_thresholds.max_rejection_rate == 0.2
+    assert config.quality_thresholds.max_duplicate_records == 0
+    assert config.analytics_top_n == 5
+
+
 @pytest.mark.parametrize(
     ("environment", "env"),
     [("prod", {}), ("prod", {"ETL_ENVIRONMENT": "staging"}), (None, {"ETL_ENVIRONMENT": "prod"})],
