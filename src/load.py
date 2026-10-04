@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +17,8 @@ def load_data(
 
     inserted_count = 0
 
-    with sqlite3.connect(database_path) as conn:
+    # Exit the transaction before closing the connection, including on failure.
+    with closing(sqlite3.connect(database_path)) as conn, conn:
         cursor = conn.cursor()
         cursor.executescript(schema_file.read_text(encoding="utf-8"))
 
