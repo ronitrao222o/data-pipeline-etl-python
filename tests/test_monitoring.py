@@ -2,6 +2,8 @@ import json
 from datetime import date
 from pathlib import Path
 
+import pytest
+
 from src.models import (
     ContractValidationSummary,
     DataProfileSummary,
@@ -57,6 +59,42 @@ def test_build_monitoring_summary_reports_quality_gate_failure(tmp_path):
     assert report["alert_count"] == 4
 
 
+@pytest.mark.parametrize(
+    ("quality_passed", "dry_run", "skipped", "exported_count", "expect_alert"),
+    [
+        (True, False, False, 1, True),
+        (False, False, False, 1, True),
+        (False, False, False, 2, False),
+        (True, True, True, 0, False),
+        (False, False, True, 0, False),
+    ],
+)
+def test_export_count_monitoring_respects_actual_export_status(
+    tmp_path, quality_passed, dry_run, skipped, exported_count, expect_alert
+):
+    warehouse_summary = _warehouse_summary(tmp_path, exported_count, skipped=skipped)
+    summary = build_monitoring_summary(
+        run_status="dry_run_success" if dry_run else "success",
+        valid_record_count=2,
+        rejected_record_count=0,
+        contract_summary=_contract_summary(passed=True),
+        quality_summary=_quality_summary(passed=quality_passed),
+        data_profile_summary=_profile_summary(row_count=2),
+        warehouse_export_summary=warehouse_summary,
+        dry_run=dry_run,
+        fail_on_quality_gate=False,
+    )
+
+    export_alerts = [
+        alert for alert in summary.alerts if alert.rule == "warehouse_export_count"
+    ]
+    assert len(export_alerts) == int(expect_alert)
+    if expect_alert:
+        assert export_alerts[0].severity == "warning"
+        assert export_alerts[0].actual_value == exported_count
+        assert export_alerts[0].expected_value == 2
+
+
 def _contract_summary(passed: bool) -> ContractValidationSummary:
     return ContractValidationSummary(
         dataset_name="sales_orders",
@@ -110,6 +148,7 @@ def _profile_summary(row_count: int) -> DataProfileSummary:
 def _warehouse_summary(
     tmp_path: Path,
     exported_record_count: int,
+    skipped: bool = False,
 ) -> WarehouseExportSummary:
     return WarehouseExportSummary(
         output_path=tmp_path / "warehouse",
@@ -117,6 +156,6 @@ def _warehouse_summary(
         partition_column="order_month",
         partition_count=1 if exported_record_count else 0,
         exported_record_count=exported_record_count,
-        skipped=False,
+        skipped=skipped,
         partitions=[],
     )

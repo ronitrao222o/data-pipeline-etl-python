@@ -113,7 +113,6 @@ def build_monitoring_summary(
         valid_record_count=valid_record_count,
         warehouse_export_summary=warehouse_export_summary,
         dry_run=dry_run,
-        quality_summary=quality_summary,
     ):
         alerts.append(
             _alert(
@@ -169,8 +168,7 @@ def _warehouse_export_mismatch(
     valid_record_count: int,
     warehouse_export_summary: WarehouseExportSummary,
     dry_run: bool,
-    quality_summary: DataQualitySummary,
 ) -> bool:
-    if dry_run or not quality_summary.passed:
+    if dry_run or warehouse_export_summary.skipped:
         return False
     return warehouse_export_summary.exported_record_count != valid_record_count
