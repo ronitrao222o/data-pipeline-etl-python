@@ -48,3 +48,26 @@ def test_validate_raw_contract_flags_schema_and_key_issues():
     assert summary.missing_required_columns == ["price"]
     assert summary.unexpected_columns == ["extra_column"]
     assert summary.duplicate_primary_keys == ["1"]
+
+
+def test_validate_raw_contract_excludes_missing_keys_from_duplicates():
+    contract_path = Path(__file__).resolve().parents[1] / "contracts/sales_orders_contract.yaml"
+    contract = load_data_contract(contract_path)
+    raw_records = [
+        {},
+        {},
+        {"order_id": None},
+        {"order_id": None},
+        {"order_id": ""},
+        {"order_id": " "},
+        {"order_id": "None"},
+        {"order_id": " 1 "},
+        {"order_id": "1"},
+        {"order_id": 0},
+        {"order_id": "0"},
+    ]
+
+    summary = validate_raw_contract(raw_records, contract)
+
+    assert summary.duplicate_primary_keys == ["0", "1"]
+    assert summary.passed is False

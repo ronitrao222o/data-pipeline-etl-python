@@ -68,7 +68,10 @@ def _duplicate_values(records: list[dict[str, Any]], key: str) -> list[str]:
     duplicates: set[str] = set()
 
     for record in records:
-        value = str(record.get(key, "")).strip()
+        raw_value = record.get(key)
+        if raw_value is None:
+            continue
+        value = str(raw_value).strip()
         if not value:
             continue
         if value in seen_values:
