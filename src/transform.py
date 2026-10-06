@@ -49,7 +49,10 @@ def transform_data(raw_data: list[dict[str, str]]) -> TransformationResult:
             order_id = int(row["order_id"])
             quantity = int(row["quantity"])
             price = float(row["price"])
-            order_date = datetime.strptime(row["order_date"], "%Y-%m-%d").date()
+            date_value = row["order_date"]
+            if isinstance(date_value, str):
+                date_value = date_value.strip()
+            order_date = datetime.strptime(date_value, "%Y-%m-%d").date()
         except (ValueError, TypeError) as error:
             rejected_records.append(
                 RejectedRecord(

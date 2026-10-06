@@ -1,10 +1,48 @@
 import sqlite3
+from datetime import date
 from pathlib import Path
 
 import pytest
 
 from src.load import load_data
 from src.transform import transform_data
+
+
+@pytest.mark.parametrize("order_date", ["2024-01-01", " 2024-01-01 ", "\t2024-01-01\r\n"])
+def test_transform_trims_date_whitespace(order_date):
+    result = transform_data([{
+        "order_id": "1",
+        "customer_id": "C001",
+        "order_date": order_date,
+        "product": "Laptop",
+        "quantity": "2",
+        "price": "500.0",
+    }])
+
+    assert result.rejected_record_count == 0
+    assert result.valid_records[0]["order_date"] == date(2024, 1, 1)
+
+
+@pytest.mark.parametrize("order_date", [" 2024-02-30 ", " 01/01/2024 ", 20240101])
+def test_transform_rejects_invalid_dates_and_continues(order_date):
+    row = {
+        "order_id": "1",
+        "customer_id": "C001",
+        "order_date": order_date,
+        "product": "Laptop",
+        "quantity": "2",
+        "price": "500.0",
+    }
+
+    result = transform_data([row, {**row, "order_date": " 2024-01-01 "}])
+
+    assert result.valid_record_count == 1
+    assert result.duplicate_order_ids == []
+    assert result.rejected_record_count == 1
+    rejected = result.rejected_records[0]
+    assert rejected.reason.startswith("Type conversion error:")
+    assert rejected.row_number == 2
+    assert rejected.payload == row
 
 
 @pytest.mark.parametrize("order_id", [str(-(2**63) - 1), str(2**63), "9" * 100])
