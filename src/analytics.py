@@ -23,7 +23,7 @@ def _rank_metrics(
         )
         for name, values in grouped_values.items()
     ]
-    return sorted(metrics, key=lambda metric: metric.revenue, reverse=True)[:top_n]
+    return sorted(metrics, key=lambda metric: (-metric.revenue, metric.name))[:top_n]
 
 
 def _daily_metrics(

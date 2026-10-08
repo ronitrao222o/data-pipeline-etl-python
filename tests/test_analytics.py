@@ -1,6 +1,38 @@
 from datetime import date
 
+import pytest
+
 from src.analytics import build_sales_analytics
+
+
+@pytest.mark.parametrize("top_n", [1, 2, 3])
+def test_revenue_ties_rank_by_name_regardless_of_input_order(top_n):
+    records = [
+        {
+            "order_id": order_id,
+            "customer_id": customer,
+            "order_date": date(2024, 1, 1),
+            "product": product,
+            "quantity": 1,
+            "price": revenue,
+            "total_amount": revenue,
+        }
+        for order_id, customer, product, revenue in [
+            (1, "C003", "Mouse", 100.0),
+            (2, "C002", "Keyboard", 100.0),
+            (3, "C001", "Adapter", 50.0),
+        ]
+    ]
+
+    for ordered_records in (records, list(reversed(records))):
+        summary = build_sales_analytics(ordered_records, top_n=top_n)
+
+        assert [metric.name for metric in summary.top_products] == [
+            "Keyboard", "Mouse", "Adapter"
+        ][:top_n]
+        assert [metric.name for metric in summary.top_customers] == [
+            "C002", "C003", "C001"
+        ][:top_n]
 
 
 def test_build_sales_analytics_ranks_products_and_customers():
