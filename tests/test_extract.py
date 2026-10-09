@@ -6,20 +6,28 @@ from src.extract import extract_data
 
 
 @pytest.mark.parametrize(
-    "contents",
+    ("contents", "line_number"),
     [
-        'order_id,product\n1,"Unclosed product\n',
-        'order_id,product\n1,"Mouse"unexpected\n',
-        'order_id,"product\n1,Mouse\n',
-        'order_id,product\n1,Mouse\n2,"Unclosed product\n',
+        ('order_id,product\n1,"Unclosed product\n', 2),
+        ('order_id,product\n1,"Mouse"unexpected\n', 2),
+        ('order_id,"product\n1,Mouse\n', 2),
+        ('order_id,product\n1,Mouse\n2,"Unclosed product\n', 3),
+        ('order_id,product\n1,"Mouse\npremium"unexpected\n', 3),
     ],
 )
-def test_extract_data_rejects_malformed_quoting(tmp_path, contents):
+def test_extract_data_rejects_malformed_quoting(tmp_path, contents, line_number, caplog):
     csv_path = tmp_path / "sales.csv"
     csv_path.write_text(contents, encoding="utf-8")
 
-    with pytest.raises(csv.Error):
+    with pytest.raises(csv.Error) as error:
         extract_data(csv_path)
+
+    assert str(error.value).startswith(
+        f"Input file {csv_path} contains malformed CSV at line {line_number}: "
+    )
+    assert isinstance(error.value.__cause__, csv.Error)
+    assert str(error.value.__cause__) in str(error.value)
+    assert str(error.value) in caplog.text
 
 
 @pytest.mark.parametrize(

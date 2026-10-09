@@ -48,6 +48,12 @@ def extract_data(file_path: str | Path) -> list[dict[str, str]]:
             logging.info("Successfully extracted %s rows from %s", len(data), path)
             return data
 
+    except csv.Error as error:
+        # DictReader only updates its line number after a record is parsed successfully.
+        line_number = reader.reader.line_num
+        message = f"Input file {path} contains malformed CSV at line {line_number}: {error}"
+        logging.error(message)
+        raise csv.Error(message) from error
     except FileNotFoundError:
         logging.error("Input file not found: %s", path)
         raise
