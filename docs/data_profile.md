@@ -25,6 +25,8 @@ Each column profile includes:
 - minimum value
 - maximum value
 
+Missing fields, `None`, empty strings, and whitespace-only strings count as null values and are excluded from distinct counts and minimum/maximum values. Zero and `False` remain valid values.
+
 ## Runtime Behavior
 The profile is generated after transformation, so it describes cleaned and enriched records.
 It is still written for dry runs and failed quality-gate runs because those modes are useful for validation and debugging.

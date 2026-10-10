@@ -1,7 +1,34 @@
 import json
 from datetime import date
 
+import pytest
+
 from src.profiling import build_data_profile, write_profile_report
+
+
+@pytest.mark.parametrize(
+    ("value", "inferred_type"),
+    [(0, "integer"), (False, "boolean"), (" Mouse ", "string")],
+)
+def test_profile_counts_blank_text_as_missing(tmp_path, value, inferred_type):
+    records = [{"value": item} for item in (None, "", " ", "\t\n", value)]
+    records.append({})
+
+    summary = build_data_profile(records, dataset_name="blank_values")
+    column = summary.columns[0]
+
+    assert column.null_count == 5
+    assert column.null_rate == 0.8333
+    assert column.distinct_count == 1
+    assert column.inferred_type == inferred_type
+    expected_bound = None if isinstance(value, bool) else value
+    assert column.min_value == expected_bound
+    assert column.max_value == expected_bound
+
+    output_path = tmp_path / "profile.json"
+    write_profile_report(summary, output_path)
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert report["columns"][0]["null_count"] == 5
 
 
 def test_build_data_profile_summarises_column_shape(tmp_path):

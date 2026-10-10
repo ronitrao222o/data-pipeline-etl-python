@@ -52,7 +52,11 @@ def _profile_column(
     values: list[Any],
     row_count: int,
 ) -> ColumnProfile:
-    non_null_values = [value for value in values if value not in (None, "")]
+    non_null_values = [
+        value
+        for value in values
+        if value is not None and not (isinstance(value, str) and not value.strip())
+    ]
     null_count = row_count - len(non_null_values)
     inferred_type = _infer_type(non_null_values)
     min_value, max_value = _min_max_values(non_null_values)
