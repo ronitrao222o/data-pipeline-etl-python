@@ -8,6 +8,29 @@ from src.load import load_data
 from src.transform import transform_data
 
 
+@pytest.mark.parametrize("field", ["customer_id", "product"])
+@pytest.mark.parametrize("value", [123, True])
+def test_transform_rejects_non_text_fields_and_continues(field, value):
+    valid_row = {
+        "order_id": "1",
+        "customer_id": "C001",
+        "order_date": "2024-01-01",
+        "product": "Laptop",
+        "quantity": "2",
+        "price": "500.0",
+    }
+    invalid_row = {**valid_row, field: value}
+
+    result = transform_data([invalid_row, valid_row])
+
+    assert result.valid_record_count == 1
+    assert result.rejected_record_count == 1
+    assert result.duplicate_order_ids == []
+    assert result.rejected_records[0].reason == f"Text fields must be strings: {field}"
+    assert result.rejected_records[0].row_number == 2
+    assert result.rejected_records[0].payload == invalid_row
+
+
 @pytest.mark.parametrize("order_date", ["2024-01-01", " 2024-01-01 ", "\t2024-01-01\r\n"])
 def test_transform_trims_date_whitespace(order_date):
     result = transform_data([{

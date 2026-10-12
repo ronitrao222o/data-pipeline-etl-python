@@ -45,6 +45,19 @@ def transform_data(raw_data: list[dict[str, str]]) -> TransformationResult:
             )
             continue
 
+        invalid_text_fields = [
+            field for field in ("customer_id", "product") if not isinstance(row[field], str)
+        ]
+        if invalid_text_fields:
+            rejected_records.append(
+                RejectedRecord(
+                    row_number=row_number,
+                    reason=f"Text fields must be strings: {', '.join(invalid_text_fields)}",
+                    payload=row,
+                )
+            )
+            continue
+
         try:
             order_id = int(row["order_id"])
             quantity = int(row["quantity"])
