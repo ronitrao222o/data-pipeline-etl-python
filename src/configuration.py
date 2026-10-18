@@ -140,6 +140,9 @@ def load_config(
         **DEFAULT_CONFIG["runtime"],
         **(merged_config.get("runtime") or {}),
     }
+    analytics_top_n = int(merged_config["analytics_top_n"])
+    if analytics_top_n <= 0:
+        raise ValueError("analytics_top_n must be greater than zero")
 
     return PipelineConfig(
         raw_data_path=_resolve_path(base_dir, str(merged_config["raw_data_path"])),
@@ -155,7 +158,7 @@ def load_config(
         ),
         warehouse_output_path=_resolve_path(base_dir, str(merged_config["warehouse_output_path"])),
         log_level=str(merged_config["log_level"]).upper(),
-        analytics_top_n=int(merged_config["analytics_top_n"]),
+        analytics_top_n=analytics_top_n,
         quality_thresholds=DataQualityThresholds(
             min_valid_records=int(quality_thresholds["min_valid_records"]),
             max_rejection_rate=float(quality_thresholds["max_rejection_rate"]),

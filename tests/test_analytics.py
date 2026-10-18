@@ -5,6 +5,12 @@ import pytest
 from src.analytics import build_sales_analytics
 
 
+@pytest.mark.parametrize("top_n", [0, -1])
+def test_build_sales_analytics_rejects_non_positive_top_n(top_n):
+    with pytest.raises(ValueError, match="top_n must be greater than zero"):
+        build_sales_analytics([], top_n=top_n)
+
+
 @pytest.mark.parametrize("top_n", [1, 2, 3])
 def test_revenue_ties_rank_by_name_regardless_of_input_order(top_n):
     records = [

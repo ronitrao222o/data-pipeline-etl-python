@@ -5,6 +5,15 @@ import pytest
 from src.configuration import load_config
 
 
+@pytest.mark.parametrize("top_n", [0, -1])
+def test_load_config_rejects_non_positive_analytics_top_n(tmp_path, top_n):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(f"analytics_top_n: {top_n}\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="analytics_top_n must be greater than zero"):
+        load_config(str(config_path), env={})
+
+
 @pytest.mark.parametrize("contents", ["[]", "[dev, prod]", "false", "0", "settings"])
 def test_load_config_rejects_non_mapping_yaml(tmp_path, contents):
     config_path = tmp_path / "config.yaml"

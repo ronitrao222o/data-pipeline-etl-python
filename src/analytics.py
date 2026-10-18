@@ -44,6 +44,9 @@ def build_sales_analytics(
     records: list[dict[str, Any]],
     top_n: int = 5,
 ) -> SalesAnalyticsSummary:
+    if top_n <= 0:
+        raise ValueError("top_n must be greater than zero")
+
     revenue_by_product: dict[str, dict[str, float | int]] = defaultdict(
         lambda: {"order_count": 0, "quantity_sold": 0, "revenue": 0.0}
     )
