@@ -144,6 +144,16 @@ def load_config(
     if analytics_top_n <= 0:
         raise ValueError("analytics_top_n must be greater than zero")
 
+    min_valid_records = int(quality_thresholds["min_valid_records"])
+    max_rejection_rate = float(quality_thresholds["max_rejection_rate"])
+    max_duplicate_records = int(quality_thresholds["max_duplicate_records"])
+    if min_valid_records < 0:
+        raise ValueError("min_valid_records must be non-negative")
+    if not 0 <= max_rejection_rate <= 1:
+        raise ValueError("max_rejection_rate must be between 0 and 1")
+    if max_duplicate_records < 0:
+        raise ValueError("max_duplicate_records must be non-negative")
+
     return PipelineConfig(
         raw_data_path=_resolve_path(base_dir, str(merged_config["raw_data_path"])),
         data_contract_path=_resolve_path(base_dir, str(merged_config["data_contract_path"])),
@@ -160,9 +170,9 @@ def load_config(
         log_level=str(merged_config["log_level"]).upper(),
         analytics_top_n=analytics_top_n,
         quality_thresholds=DataQualityThresholds(
-            min_valid_records=int(quality_thresholds["min_valid_records"]),
-            max_rejection_rate=float(quality_thresholds["max_rejection_rate"]),
-            max_duplicate_records=int(quality_thresholds["max_duplicate_records"]),
+            min_valid_records=min_valid_records,
+            max_rejection_rate=max_rejection_rate,
+            max_duplicate_records=max_duplicate_records,
         ),
         runtime=RuntimeConfig(
             environment=str(active_environment),

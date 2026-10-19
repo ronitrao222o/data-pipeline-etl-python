@@ -5,6 +5,45 @@ import pytest
 from src.configuration import load_config
 
 
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("min_valid_records", "-1", "min_valid_records must be non-negative"),
+        ("max_rejection_rate", "-0.1", "max_rejection_rate must be between 0 and 1"),
+        ("max_rejection_rate", "1.1", "max_rejection_rate must be between 0 and 1"),
+        ("max_rejection_rate", ".nan", "max_rejection_rate must be between 0 and 1"),
+        ("max_rejection_rate", ".inf", "max_rejection_rate must be between 0 and 1"),
+        ("max_duplicate_records", "-1", "max_duplicate_records must be non-negative"),
+    ],
+)
+def test_load_config_rejects_invalid_quality_thresholds(tmp_path, field, value, message):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(f"quality_thresholds:\n  {field}: {value}\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        load_config(str(config_path), env={})
+
+
+def test_load_config_validates_environment_quality_override(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="max_rejection_rate must be between 0 and 1"):
+        load_config(str(config_path), env={"ETL_MAX_REJECTION_RATE": "2"})
+
+
+def test_load_config_accepts_quality_threshold_boundaries(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        "quality_thresholds:\n  min_valid_records: 0\n  max_rejection_rate: 1\n"
+        "  max_duplicate_records: 0\n",
+        encoding="utf-8",
+    )
+
+    config = load_config(str(config_path), env={})
+    assert config.quality_thresholds.max_rejection_rate == 1
+
+
 @pytest.mark.parametrize("top_n", [0, -1])
 def test_load_config_rejects_non_positive_analytics_top_n(tmp_path, top_n):
     config_path = tmp_path / "config.yaml"
