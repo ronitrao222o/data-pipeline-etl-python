@@ -1,11 +1,27 @@
 import json
+import logging
 import sqlite3
 from pathlib import Path
 
 import pytest
 
-from src.pipeline import run_pipeline
+from src.pipeline import configure_logging, run_pipeline
 from src.quality import DataQualityError
+
+
+@pytest.mark.parametrize("level", ["VERBOSE", "", "INFOO"])
+def test_configure_logging_rejects_unknown_levels(level):
+    with pytest.raises(ValueError, match="Unsupported log level"):
+        configure_logging(level)
+
+
+def test_configure_logging_accepts_lowercase_level(monkeypatch):
+    configured = {}
+    monkeypatch.setattr(logging, "basicConfig", lambda **kwargs: configured.update(kwargs))
+
+    configure_logging("warning")
+
+    assert configured["level"] == logging.WARNING
 
 
 @pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])

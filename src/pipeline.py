@@ -37,7 +37,10 @@ LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 
 
 def configure_logging(level: str = "INFO") -> None:
-    logging.basicConfig(level=getattr(logging, level, logging.INFO), format=LOG_FORMAT)
+    resolved_level = logging.getLevelNamesMapping().get(level.upper())
+    if resolved_level is None:
+        raise ValueError(f"Unsupported log level: {level}")
+    logging.basicConfig(level=resolved_level, format=LOG_FORMAT)
 
 
 def write_run_report(summary: PipelineRunSummary) -> None:
