@@ -40,6 +40,34 @@ def test_export_partitioned_sales_writes_partitions_and_manifest(tmp_path):
     assert manifest["exported_record_count"] == 2
 
 
+def test_export_partitioned_sales_removes_stale_generated_partitions(tmp_path):
+    january = {
+        "order_id": 1,
+        "customer_id": "C001",
+        "order_date": date(2024, 1, 10),
+        "product": "Laptop",
+        "quantity": 1,
+        "price": 60000.0,
+        "total_amount": 60000.0,
+    }
+    february = {**january, "order_id": 2, "order_date": date(2024, 2, 5)}
+    output_path = tmp_path / "warehouse"
+
+    export_partitioned_sales([january, february], output_path, run_id="first-run")
+    unrelated_file = output_path / "order_month=2024-01" / "notes.txt"
+    unrelated_file.write_text("keep this", encoding="utf-8")
+
+    summary = export_partitioned_sales([february], output_path, run_id="second-run")
+
+    assert not (output_path / "order_month=2024-01" / "part-000.csv").exists()
+    assert unrelated_file.read_text(encoding="utf-8") == "keep this"
+    assert (output_path / "order_month=2024-02" / "part-000.csv").exists()
+    assert summary.partition_count == 1
+    manifest = json.loads((output_path / "_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["run_id"] == "second-run"
+    assert [part["partition_value"] for part in manifest["partitions"]] == ["2024-02"]
+
+
 def test_export_partitioned_sales_skips_files_for_dry_run(tmp_path):
     summary = export_partitioned_sales(
         records=[],

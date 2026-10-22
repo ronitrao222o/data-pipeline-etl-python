@@ -29,5 +29,6 @@ This keeps the export easy to inspect locally while showing a common pattern use
 
 ## Runtime Behavior
 - Normal runs write partition files and a manifest
+- Reruns remove generated month CSVs that are absent from the latest dataset
 - `--dry-run` skips partition file generation while still writing run, analytics, and profile reports
 - failed quality gates skip partition file generation while still writing diagnostics

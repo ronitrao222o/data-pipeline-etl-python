@@ -58,6 +58,13 @@ def export_partitioned_sales(
             )
         )
 
+    current_dirs = {f"order_month={month}" for month in grouped_records}
+    for stale_file in base_path.glob("order_month=*/part-000.csv"):
+        if stale_file.parent.name not in current_dirs:
+            stale_file.unlink()
+            if not any(stale_file.parent.iterdir()):
+                stale_file.parent.rmdir()
+
     summary = WarehouseExportSummary(
         output_path=base_path,
         manifest_path=manifest_path,
