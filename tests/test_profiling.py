@@ -6,6 +6,15 @@ import pytest
 from src.profiling import build_data_profile, write_profile_report
 
 
+def test_profile_distinguishes_values_with_different_types():
+    values = [1, "1", True, "True", date(2024, 1, 1), "2024-01-01"]
+
+    summary = build_data_profile([{"value": value} for value in values], "mixed_values")
+
+    assert summary.columns[0].distinct_count == len(values)
+    assert summary.columns[0].null_count == 0
+
+
 @pytest.mark.parametrize(
     ("value", "inferred_type"),
     [(0, "integer"), (False, "boolean"), (" Mouse ", "string")],

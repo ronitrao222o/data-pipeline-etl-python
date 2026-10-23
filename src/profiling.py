@@ -101,7 +101,7 @@ def _min_max_values(values: list[Any]) -> tuple[Any | None, Any | None]:
     return None, None
 
 
-def _normalise_distinct_value(value: Any) -> str:
+def _normalise_distinct_value(value: Any) -> tuple[type[Any], str]:
     if isinstance(value, datetime | date):
-        return value.isoformat()
-    return str(value)
+        return type(value), value.isoformat()
+    return type(value), str(value)
